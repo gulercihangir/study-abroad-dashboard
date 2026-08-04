@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
+import resend 
 
 load_dotenv()
 
@@ -20,6 +21,8 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-to-somethin
 db = SQLAlchemy(app)
 
 gemini_client = genai.Client()  # reads GEMINI_API_KEY from .env automatically
+resend.api_key = os.environ.get("RESEND_API_KEY")
+NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL")
 
 _COST_OF_LIVING_CACHE = None
 
@@ -120,7 +123,17 @@ class Program(db.Model):
 
     def __repr__(self):
         return f"{self.major} @ {self.university.name if self.university else '?'}"
+    
+class ConsultationLead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200))
+    email = db.Column(db.String(200))
+    message = db.Column(db.Text)
+    program_interest = db.Column(db.String(300))  # which result they clicked from
+    submitted_at = db.Column(db.DateTime, server_default=db.func.now())
 
+    def __repr__(self):
+        return f"{self.name} ({self.email})"
 
 class UniversityAdmin(ModelView):
     form_choices = {
@@ -311,12 +324,43 @@ def evaluate_letter():
     except Exception as e:
         print("Error evaluating letter:", e)
         return jsonify({"error": "Something went wrong generating feedback. Check your API key and try again."}), 500
+@app.route("/api/consultation-interest", methods=["POST"])
+def consultation_interest():
+    data = request.json
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip()
+    message = (data.get("message") or "").strip()
+    program_interest = (data.get("program_interest") or "").strip()
 
+    if not name or not email:
+        return jsonify({"error": "Please provide your name and email."}), 400
+
+    lead = ConsultationLead(name=name, email=email, message=message, program_interest=program_interest)
+    db.session.add(lead)
+    db.session.commit()
+
+    if resend.api_key and NOTIFICATION_EMAIL:
+        try:
+            resend.Emails.send({
+                "from": "onboarding@resend.dev",
+                "to": NOTIFICATION_EMAIL,
+                "subject": f"New consultation interest: {name}",
+                "html": f"""
+                    <p><strong>Name:</strong> {name}</p>
+                    <p><strong>Email:</strong> {email}</p>
+                    <p><strong>Interested program:</strong> {program_interest or 'Not specified'}</p>
+                    <p><strong>Message:</strong> {message or '(none)'}</p>
+                """,
+            })
+        except Exception as e:
+            print("Email notification failed (lead was still saved):", e)
+
+    return jsonify({"status": "received"})
 
 admin = Admin(app, name="Study Abroad Dashboard Admin", theme=Bootstrap4Theme())
 admin.add_view(UniversityAdmin(University, db.session))
 admin.add_view(ProgramAdmin(Program, db.session))
-
+admin.add_view(ModelView(ConsultationLead, db.session))
 with app.app_context():
     db.create_all()
 

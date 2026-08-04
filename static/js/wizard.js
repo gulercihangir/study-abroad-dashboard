@@ -100,6 +100,8 @@ function renderPurchasingPower(pp) {
   container.classList.remove("hidden");
 }
 
+let lastViewedProgram = null;
+
 function renderResults(results) {
   const container = document.getElementById("results-container");
   container.innerHTML = "";
@@ -130,10 +132,57 @@ function renderResults(results) {
       ${r.website_url ? `<a href="${r.website_url}" target="_blank">Visit official website</a>` : ""}
     `;
 
+    // Remember the top result as the "program of interest" for the consultation form
+    if (index === 0) {
+      lastViewedProgram = `${r.program_name} — ${r.university_name}`;
+    }
+
     container.appendChild(card);
   });
 
   document.getElementById("next-steps").classList.remove("hidden");
+}
+
+function openConsultationForm() {
+  document.getElementById("consultation-form").classList.remove("hidden");
+}
+
+function submitConsultationInterest() {
+  const name = document.getElementById("lead-name").value.trim();
+  const email = document.getElementById("lead-email").value.trim();
+  const message = document.getElementById("lead-message").value.trim();
+
+  if (!name || !email) {
+    alert("Please enter your name and email before sending.");
+    return;
+  }
+
+  const resultDiv = document.getElementById("consultation-form-result");
+  resultDiv.innerHTML = "<p>Sending your request…</p>";
+  resultDiv.classList.remove("hidden");
+
+  fetch("/api/consultation-interest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: name,
+      email: email,
+      message: message,
+      program_interest: lastViewedProgram || studentAnswers.major
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        resultDiv.innerHTML = `<p>${data.error}</p>`;
+        return;
+      }
+      resultDiv.innerHTML = "<p>Thanks! We'll be in touch soon to set up your free 30-minute consultation.</p>";
+    })
+    .catch(error => {
+      console.error("Error submitting consultation interest:", error);
+      resultDiv.innerHTML = "<p>Something went wrong. Please try again.</p>";
+    });
 }
 
 function evaluateLetter() {
@@ -168,7 +217,6 @@ function evaluateLetter() {
 }
 
 function startOver() {
-  // Reset the answers object
   studentAnswers = {
     major: null,
     max_budget: null,
@@ -178,19 +226,26 @@ function startOver() {
     campus_type: null,
     diploma_type: null,
   };
+  lastViewedProgram = null;
 
-  // Clear old text left in the input fields
   document.getElementById("student-major").value = "";
   document.getElementById("student-budget").value = "";
   document.getElementById("student-region").value = "";
 
-  // Clear old results and letter feedback so nothing lingers
   document.getElementById("results-container").innerHTML = "";
   document.getElementById("next-steps").classList.add("hidden");
   document.getElementById("purchasing-power-info").classList.add("hidden");
+
   document.getElementById("letter-text").value = "";
   document.getElementById("letter-feedback-result").classList.add("hidden");
   document.getElementById("letter-feedback-result").innerHTML = "";
+
+  document.getElementById("consultation-form").classList.add("hidden");
+  document.getElementById("lead-name").value = "";
+  document.getElementById("lead-email").value = "";
+  document.getElementById("lead-message").value = "";
+  document.getElementById("consultation-form-result").classList.add("hidden");
+  document.getElementById("consultation-form-result").innerHTML = "";
 
   showStep(1);
 }
