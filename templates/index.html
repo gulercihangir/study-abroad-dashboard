@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Study Abroad Matcher</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <h1>Find Your University</h1>
+
+  <div id="step-1" class="wizard-step">
+    <div class="step-counter">Step 1 of 7</div>
+    <h2>What do you want to study?</h2>
+    <input type="text" id="student-major" placeholder="e.g. Computer Science, Psychology, Engineering" />
+    <br>
+    <button onclick="saveMajor()">Next</button>
+  </div>
+
+  <div id="step-2" class="wizard-step hidden">
+    <div class="step-counter">Step 2 of 7</div>
+    <h2>What's your monthly budget?</h2>
+    <p>Include both living costs and rent (in EUR)</p>
+    <input type="number" id="student-budget" min="0" placeholder="e.g. 1200" />
+    <br>
+    <button onclick="saveBudget()">Next</button>
+  </div>
+
+  <div id="step-3" class="wizard-step hidden">
+    <div class="step-counter">Step 3 of 7</div>
+    <h2>Any preferred region?</h2>
+    <input type="text" id="student-region" placeholder="e.g. Rotterdam, Eindhoven or leave blank for no preference" />
+    <br>
+    <button onclick="saveRegion()">Next</button>
+  </div>
+
+  <div id="step-4" class="wizard-step hidden">
+    <div class="step-counter">Step 4 of 7</div>
+    <h2>How do you learn best?</h2>
+    <p>This helps us match you with programs that fit your study style.</p>
+
+    <button class="option-card" onclick="selectLearningStyle('hands_on')">
+      <div class="option-title">Hands-on labs & projects</div>
+      <div class="option-desc">Learning by doing, building, experimenting</div>
+    </button>
+    <button class="option-card" onclick="selectLearningStyle('lectures')">
+      <div class="option-title">Lectures & theory</div>
+      <div class="option-desc">Deep academic concepts and structured curriculum</div>
+    </button>
+    <button class="option-card" onclick="selectLearningStyle('collaborative')">
+      <div class="option-title">Group work & discussion</div>
+      <div class="option-desc">Team projects, seminars, peer learning</div>
+    </button>
+    <button class="option-card" onclick="selectLearningStyle('self_paced')">
+      <div class="option-title">Independent research</div>
+      <div class="option-desc">Self-directed, reading-heavy, autonomous study</div>
+    </button>
+  </div>
+
+  <div id="step-5" class="wizard-step hidden">
+    <div class="step-counter">Step 5 of 7</div>
+    <h2>What is your primary career goal?</h2>
+    <p>We'll prioritize programs known for strong outcomes in your field.</p>
+
+    <button class="option-card" onclick="selectCareerGoal('industry')">
+      <div class="option-title">Work in industry / corporate</div>
+      <div class="option-desc">Large companies, startups, or corporate career paths</div>
+    </button>
+    <button class="option-card" onclick="selectCareerGoal('academia')">
+      <div class="option-title">Continue to graduate school</div>
+      <div class="option-desc">PhD, Master's, or research-focused path</div>
+    </button>
+    <button class="option-card" onclick="selectCareerGoal('entrepreneurship')">
+      <div class="option-title">Start my own business</div>
+      <div class="option-desc">Entrepreneurship, innovation, and leadership</div>
+    </button>
+    <button class="option-card" onclick="selectCareerGoal('public_service')">
+      <div class="option-title">Government or non-profit</div>
+      <div class="option-desc">Public sector, NGO, or social impact work</div>
+    </button>
+  </div>
+
+  <div id="step-6" class="wizard-step hidden">
+    <div class="step-counter">Step 6 of 7</div>
+    <h2>What campus environment suits you?</h2>
+    <p>Campus culture significantly impacts your university experience.</p>
+
+    <button class="option-card" onclick="selectCampusType('large_urban')">
+      <div class="option-title">Large urban university</div>
+      <div class="option-desc">City campus, vibrant social scene</div>
+    </button>
+    <button class="option-card" onclick="selectCampusType('medium')">
+      <div class="option-title">Mid-size campus</div>
+      <div class="option-desc">Balanced campus life</div>
+    </button>
+    <button class="option-card" onclick="selectCampusType('small_liberal')">
+      <div class="option-title">Small liberal arts college</div>
+      <div class="option-desc">Tight-knit community</div>
+    </button>
+    <button class="option-card" onclick="selectCampusType('online')">
+      <div class="option-title">Online or hybrid</div>
+      <div class="option-desc">Flexibility to study remotely or blended</div>
+    </button>
+  </div>
+
+  <div id="step-7" class="wizard-step hidden">
+    <div class="step-counter">Step 7 of 7</div>
+    <h2>Which program did you complete?</h2>
+    <p>We'll add more diploma types over time — pick the closest match for now.</p>
+
+    <button class="option-card" onclick="selectDiplomaType('turkish_lise')">
+      <div class="option-title">Turkish High School Diploma (Lise Diploması)</div>
+      <div class="option-desc">Completed secondary education in Turkey</div>
+    </button>
+    <button class="option-card" onclick="selectDiplomaType('other')">
+      <div class="option-title">Other / not listed yet</div>
+      <div class="option-desc">International Baccalaureate, A-Levels, and others coming soon</div>
+    </button>
+  </div>
+
+  <div id="step-8" class="wizard-step hidden">
+    <button class="secondary-btn" onclick="startOver()">↺ Start Over</button>
+
+    <h2>Your Top University Matches</h2>
+
+    <div id="purchasing-power-info" class="pp-box hidden"></div>
+
+    <div id="results-container"></div>
+
+    <div id="next-steps" class="hidden">
+      <h3>What's next?</h3>
+      <button onclick="alert('Apply-yourself flow coming soon.')">Apply Yourself</button>
+      <button class="secondary-btn" onclick="alert('Discounted consulting flow coming soon.')">Try Discounted Online Consulting</button>
+    </div>
+
+    <div id="letter-feedback-section" class="letter-box">
+      <h3>Get Quick Feedback on Your Motivation Letter</h3>
+      <p>Paste a draft below for general structure and clarity feedback. For a personalized, application-specific review before submitting, use our discounted consulting service above.</p>
+      <textarea id="letter-text" rows="8" placeholder="Paste your motivation letter draft here..."></textarea>
+      <br>
+      <button onclick="evaluateLetter()">Get Feedback</button>
+      <div id="letter-feedback-result" class="hidden"></div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/wizard.js') }}"></script>
+</body>
+</html>
