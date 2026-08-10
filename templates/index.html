@@ -7,6 +7,14 @@
 </head>
 <body>
 
+  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
+    {% if current_user.is_authenticated %}
+      Logged in as {{ current_user.name }} — <a href="/logout" style="color: var(--secondary);">Log out</a>
+    {% else %}
+      <a href="/login" style="color: var(--secondary);">Log in</a> or <a href="/register" style="color: var(--secondary);">Sign up</a>
+    {% endif %}
+  </div>
+
   <h1>Find Your University</h1>
 
   <div id="step-1" class="wizard-step">

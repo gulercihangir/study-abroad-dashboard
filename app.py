@@ -2,13 +2,14 @@ import os
 import requests
 from google import genai
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, redirect, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
 import resend 
-
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv()
 
 app = Flask(__name__)
@@ -19,7 +20,9 @@ if database_url.startswith("postgres://"):
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-to-something-random")
 db = SQLAlchemy(app)
-
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
 gemini_client = genai.Client()  # reads GEMINI_API_KEY from .env automatically
 resend.api_key = os.environ.get("RESEND_API_KEY")
 NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL")
@@ -157,6 +160,26 @@ class ProgramAdmin(ModelView):
     }
     column_list = ["major", "university", "application_deadline", "numerus_fixus"]
 
+class Student(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(200), unique=True, nullable=False)
+    password_hash = db.Column(db.String(300), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def __repr__(self):
+        return f"{self.name} ({self.email})"
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Student.query.get(int(user_id))
 
 TEACHING_STYLE_KEYWORDS = {
     "hands_on": ["hands-on", "hands on", "project-based", "labs", "practical"],
@@ -357,10 +380,57 @@ def consultation_interest():
 
     return jsonify({"status": "received"})
 
-admin = Admin(app, name="Study Abroad Dashboard Admin", theme=Bootstrap4Theme())
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not name or not email or not password:
+            return render_template("register.html", error="Please fill in all fields.")
+
+        if Student.query.filter_by(email=email).first():
+            return render_template("register.html", error="An account with this email already exists.")
+
+        student = Student(name=name, email=email)
+        student.set_password(password)
+        db.session.add(student)
+        db.session.commit()
+
+        login_user(student)
+        return redirect("/")
+
+    return render_template("register.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        student = Student.query.filter_by(email=email).first()
+        if student and student.check_password(password):
+            login_user(student)
+            return redirect("/")
+
+        return render_template("login.html", error="Invalid email or password.")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect("/")
+
+admin = Admin(app, name="Study Abroad Dashboard Admin", theme=Bootstrap4Theme(swatch="cosmo"))
 admin.add_view(UniversityAdmin(University, db.session))
 admin.add_view(ProgramAdmin(Program, db.session))
 admin.add_view(ModelView(ConsultationLead, db.session))
+admin.add_view(ModelView(Student, db.session))
 with app.app_context():
     db.create_all()
 
