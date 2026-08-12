@@ -5,6 +5,10 @@ let studentAnswers = {
   learning_style: null,
   career_goal: null,
   campus_type: null,
+  social_scene: null,
+  priority_major: 5,
+  priority_cost: 5,
+  priority_region: 5,
   diploma_type: null,
 };
 
@@ -53,6 +57,18 @@ function selectCampusType(value) {
   showStep(7);
 }
 
+function selectSocialScene(value) {
+  studentAnswers.social_scene = value;
+  showStep(8);
+}
+
+function savePriorities() {
+  studentAnswers.priority_major = document.getElementById("priority-major-slider").value;
+  studentAnswers.priority_cost = document.getElementById("priority-cost-slider").value;
+  studentAnswers.priority_region = document.getElementById("priority-region-slider").value;
+  showStep(9);
+}
+
 function selectDiplomaType(value) {
   studentAnswers.diploma_type = value;
   findMatches();
@@ -70,7 +86,7 @@ function findMatches() {
       console.log("Purchasing power context:", data.purchasing_power);
       renderPurchasingPower(data.purchasing_power);
       renderResults(data.results);
-      showStep(8);
+      showStep(10);
     })
     .catch(error => {
       console.error("Error finding matches:", error);
@@ -132,7 +148,6 @@ function renderResults(results) {
       ${r.website_url ? `<a href="${r.website_url}" target="_blank">Visit official website</a>` : ""}
     `;
 
-    // Remember the top result as the "program of interest" for the consultation form
     if (index === 0) {
       lastViewedProgram = `${r.program_name} — ${r.university_name}`;
     }
@@ -145,6 +160,11 @@ function renderResults(results) {
 
 function openConsultationForm() {
   document.getElementById("consultation-form").classList.remove("hidden");
+
+  if (window.currentUser && window.currentUser.isAuthenticated) {
+    document.getElementById("lead-name").value = window.currentUser.name;
+    document.getElementById("lead-email").value = window.currentUser.email;
+  }
 }
 
 function submitConsultationInterest() {
@@ -182,6 +202,29 @@ function submitConsultationInterest() {
     .catch(error => {
       console.error("Error submitting consultation interest:", error);
       resultDiv.innerHTML = "<p>Something went wrong. Please try again.</p>";
+    });
+}
+
+function saveMyResults() {
+  if (!window.currentUser || !window.currentUser.isAuthenticated) {
+    if (confirm("Please log in or sign up to save your results. Go to the login page now?")) {
+      window.location.href = "/login";
+    }
+    return;
+  }
+
+  fetch("/api/save-answers", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(studentAnswers)
+  })
+    .then(response => response.json())
+    .then(data => {
+      alert("Your results have been saved to your account!");
+    })
+    .catch(error => {
+      console.error("Error saving answers:", error);
+      alert("Something went wrong saving your results.");
     });
 }
 
@@ -224,6 +267,10 @@ function startOver() {
     learning_style: null,
     career_goal: null,
     campus_type: null,
+    social_scene: null,
+    priority_major: 5,
+    priority_cost: 5,
+    priority_region: 5,
     diploma_type: null,
   };
   lastViewedProgram = null;
@@ -231,6 +278,13 @@ function startOver() {
   document.getElementById("student-major").value = "";
   document.getElementById("student-budget").value = "";
   document.getElementById("student-region").value = "";
+
+  document.getElementById("priority-major-slider").value = 5;
+  document.getElementById("priority-cost-slider").value = 5;
+  document.getElementById("priority-region-slider").value = 5;
+  document.getElementById("major-slider-value").textContent = "5";
+  document.getElementById("cost-slider-value").textContent = "5";
+  document.getElementById("region-slider-value").textContent = "5";
 
   document.getElementById("results-container").innerHTML = "";
   document.getElementById("next-steps").classList.add("hidden");

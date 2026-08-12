@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Consultant Dashboard — Study Abroad Matcher</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
+    Logged in as {{ current_user.name }} — <a href="/consultant/logout" style="color: var(--secondary);">Log out</a>
+  </div>
+
+  <h1>My Students</h1>
+
+  {% if students|length == 0 %}
+    <div class="letter-box">
+      <p>No students assigned to you yet. Assignments are currently made by the platform admin — once a student is linked to your account, they'll appear here.</p>
+    </div>
+  {% else %}
+    {% for student in students %}
+      <a href="/consultant/student/{{ student.id }}" style="text-decoration: none; color: inherit;">
+        <div class="result-card">
+          <h3>{{ student.name }}</h3>
+          <p>{{ student.email }}</p>
+        </div>
+      </a>
+    {% endfor %}
+  {% endif %}
+</body>
+</html>

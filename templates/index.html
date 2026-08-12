@@ -9,7 +9,7 @@
 
   <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
     {% if current_user.is_authenticated %}
-      Logged in as {{ current_user.name }} — <a href="/logout" style="color: var(--secondary);">Log out</a>
+      Logged in as {{ current_user.name }} — <a href="/my-checklist" style="color: var(--secondary);">My Checklist</a> — <a href="/logout" style="color: var(--secondary);">Log out</a>
     {% else %}
       <a href="/login" style="color: var(--secondary);">Log in</a> or <a href="/register" style="color: var(--secondary);">Sign up</a>
     {% endif %}
@@ -18,7 +18,7 @@
   <h1>Find Your University</h1>
 
   <div id="step-1" class="wizard-step">
-    <div class="step-counter">Step 1 of 7</div>
+    <div class="step-counter">Step 1 of 9</div>
     <h2>What do you want to study?</h2>
     <input type="text" id="student-major" placeholder="e.g. Computer Science, Psychology, Engineering" />
     <br>
@@ -26,7 +26,7 @@
   </div>
 
   <div id="step-2" class="wizard-step hidden">
-    <div class="step-counter">Step 2 of 7</div>
+    <div class="step-counter">Step 2 of 9</div>
     <h2>What's your monthly budget?</h2>
     <p>Include both living costs and rent (in EUR)</p>
     <input type="number" id="student-budget" min="0" placeholder="e.g. 1200" />
@@ -35,7 +35,7 @@
   </div>
 
   <div id="step-3" class="wizard-step hidden">
-    <div class="step-counter">Step 3 of 7</div>
+    <div class="step-counter">Step 3 of 9</div>
     <h2>Any preferred region?</h2>
     <input type="text" id="student-region" placeholder="e.g. Rotterdam, Eindhoven or leave blank for no preference" />
     <br>
@@ -43,7 +43,7 @@
   </div>
 
   <div id="step-4" class="wizard-step hidden">
-    <div class="step-counter">Step 4 of 7</div>
+    <div class="step-counter">Step 4 of 9</div>
     <h2>How do you learn best?</h2>
     <p>This helps us match you with programs that fit your study style.</p>
 
@@ -66,7 +66,7 @@
   </div>
 
   <div id="step-5" class="wizard-step hidden">
-    <div class="step-counter">Step 5 of 7</div>
+    <div class="step-counter">Step 5 of 9</div>
     <h2>What is your primary career goal?</h2>
     <p>We'll prioritize programs known for strong outcomes in your field.</p>
 
@@ -89,7 +89,7 @@
   </div>
 
   <div id="step-6" class="wizard-step hidden">
-    <div class="step-counter">Step 6 of 7</div>
+    <div class="step-counter">Step 6 of 9</div>
     <h2>What campus environment suits you?</h2>
     <p>Campus culture significantly impacts your university experience.</p>
 
@@ -112,7 +112,47 @@
   </div>
 
   <div id="step-7" class="wizard-step hidden">
-    <div class="step-counter">Step 7 of 7</div>
+    <div class="step-counter">Step 7 of 9</div>
+    <h2>What kind of student life do you want?</h2>
+    <p>Some Dutch student cities are known for lively nightlife and active student associations, others for a quieter, studious atmosphere.</p>
+
+    <button class="option-card" onclick="selectSocialScene('lively')">
+      <div class="option-title">Lively & social</div>
+      <div class="option-desc">Active nightlife, student associations, big events</div>
+    </button>
+    <button class="option-card" onclick="selectSocialScene('quiet')">
+      <div class="option-title">Quiet & studious</div>
+      <div class="option-desc">Calm atmosphere, focus on academics</div>
+    </button>
+    <button class="option-card" onclick="selectSocialScene('no_preference')">
+      <div class="option-title">No preference</div>
+      <div class="option-desc">Doesn't matter much to me</div>
+    </button>
+  </div>
+
+  <div id="step-8" class="wizard-step hidden">
+    <div class="step-counter">Step 8 of 9</div>
+    <h2>What matters most to you?</h2>
+    <p>Drag the sliders — this personalizes how we weigh your results. Higher = more important to you.</p>
+
+    <label>Major fit: <span id="major-slider-value">5</span>/10</label>
+    <input type="range" min="1" max="10" value="5" id="priority-major-slider"
+           oninput="document.getElementById('major-slider-value').textContent = this.value" />
+
+    <label>Cost: <span id="cost-slider-value">5</span>/10</label>
+    <input type="range" min="1" max="10" value="5" id="priority-cost-slider"
+           oninput="document.getElementById('cost-slider-value').textContent = this.value" />
+
+    <label>Location: <span id="region-slider-value">5</span>/10</label>
+    <input type="range" min="1" max="10" value="5" id="priority-region-slider"
+           oninput="document.getElementById('region-slider-value').textContent = this.value" />
+
+    <br>
+    <button onclick="savePriorities()">Next</button>
+  </div>
+
+  <div id="step-9" class="wizard-step hidden">
+    <div class="step-counter">Step 9 of 9</div>
     <h2>Which program did you complete?</h2>
     <p>We'll add more diploma types over time — pick the closest match for now.</p>
 
@@ -126,7 +166,7 @@
     </button>
   </div>
 
-  <div id="step-8" class="wizard-step hidden">
+  <div id="step-10" class="wizard-step hidden">
     <button class="secondary-btn" onclick="startOver()">↺ Start Over</button>
 
     <h2>Your Top University Matches</h2>
@@ -139,6 +179,7 @@
       <h3>What's next?</h3>
       <button onclick="alert('Apply-yourself flow coming soon.')">Apply Yourself</button>
       <button class="secondary-btn" onclick="openConsultationForm()">Try Discounted Online Consulting</button>
+      <button class="secondary-btn" onclick="saveMyResults()">💾 Save My Results</button>
     </div>
 
     <div id="consultation-form" class="letter-box hidden">
@@ -162,6 +203,14 @@
     </div>
   </div>
 
+  <script>
+  window.currentUser = {
+  isAuthenticated: {{ 'true' if current_user.is_authenticated else 'false' }},
+  name: "{{ current_user.name if current_user.is_authenticated else '' }}",
+  email: "{{ current_user.email if current_user.is_authenticated else '' }}"
+  };
+    
+  </script>
   <script src="{{ url_for('static', filename='js/wizard.js') }}"></script>
 </body>
 </html>

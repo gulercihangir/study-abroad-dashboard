@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ student.name }} — Consultant Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
+    Logged in as {{ current_user.name }} — <a href="/consultant/logout" style="color: var(--secondary);">Log out</a>
+  </div>
+
+  <a href="/consultant/dashboard" style="color: var(--secondary); font-size: 13px;">&larr; Back to my students</a>
+
+  <h1>{{ student.name }}</h1>
+  <p>{{ student.email }}</p>
+
+  <div class="pp-box">
+    <h3>Student Profile</h3>
+    {% if profile %}
+      <div class="pp-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.major or "—" }}</div><div class="pp-label">Major</div></div>
+        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">€{{ profile.max_budget or "—" }}</div><div class="pp-label">Budget</div></div>
+        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.region or "No preference" }}</div><div class="pp-label">Region</div></div>
+        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.learning_style or "—" }}</div><div class="pp-label">Learning style</div></div>
+        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.career_goal or "—" }}</div><div class="pp-label">Career goal</div></div>
+        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.diploma_type or "—" }}</div><div class="pp-label">Diploma</div></div>
+      </div>
+      <p class="pp-source">Saved on {{ profile.saved_at.strftime("%d %b %Y") }}</p>
+    {% else %}
+      <p>This student hasn't saved their questionnaire results yet.</p>
+    {% endif %}
+  </div>
+
+  <div class="letter-box">
+    <h3>Admission Checklist</h3>
+
+    <div id="checklist-list">
+      {% for item in checklist %}
+        <div class="result-card" id="item-{{ item.id }}" style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <input type="checkbox" class="check-item" data-id="{{ item.id }}" {% if item.done %}checked="checked"{% endif %} style="width: 20px; height: 20px;">
+            <div style="flex: 1;">
+              <div {% if item.done %}style="text-decoration: line-through; color: var(--muted-foreground);"{% endif %}>{{ item.title }}</div>
+              {% if item.due_date %}<div style="font-size: 11px; color: var(--secondary);">Due: {{ item.due_date }}</div>{% endif %}
+            </div>
+          </div>
+          <button class="secondary-btn" onclick="toggleVisibility('{{ item.id }}', this)" style="font-size: 11px; padding: 6px 12px;">
+            {% if item.visible_to_student %}👁 Student Viewable{% else %}🔒 Internal Note{% endif %}
+          </button>
+        </div>
+      {% endfor %}
+    </div>
+
+    <form method="POST" style="margin-top: 20px;">
+      <input type="text" name="title" placeholder="New checklist item (e.g. Submit TU Delft application)" required />
+      <input type="text" name="due_date" placeholder="Due date (optional, e.g. 15 January 2026)" />
+      <br>
+      <button type="submit">+ Add Item</button>
+    </form>
+  </div>
+
+  <script>
+    function toggleDone(itemId) {
+      fetch(`/consultant/checklist/${itemId}/toggle`, { method: "POST" })
+        .then(res => res.json())
+        .then(() => location.reload());
+    }
+
+    function toggleVisibility(itemId, btn) {
+      fetch(`/consultant/checklist/${itemId}/visibility`, { method: "POST" })
+        .then(res => res.json())
+        .then(() => location.reload());
+    }
+
+    // attach handlers for checkboxes (avoid inline onclick with templating)
+    document.querySelectorAll('.check-item').forEach(cb => {
+      cb.addEventListener('click', function() {
+        const itemId = this.getAttribute('data-id');
+        fetch(`/consultant/checklist/${itemId}/toggle`, { method: 'POST' })
+          .then(res => res.json())
+          .then(() => location.reload());
+      });
+    });
+  </script>
+</body>
+</html>

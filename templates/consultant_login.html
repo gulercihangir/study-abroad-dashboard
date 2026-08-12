@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Consultant Log In — Study Abroad Matcher</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <h1>Consultant Log In</h1>
+
+  <div class="letter-box" style="max-width: 400px; margin: 0 auto;">
+    {% if error %}
+      <p style="color: #F59E0B;">{{ error }}</p>
+    {% endif %}
+
+    <form method="POST">
+      <input type="email" name="email" placeholder="Your email" required />
+      <input type="password" name="password" placeholder="Your password" required />
+      <br>
+      <button type="submit">Log In</button>
+    </form>
+
+    <p style="margin-top: 16px;">Don't have an account? <a href="/consultant/register" style="color: var(--secondary);">Sign up</a></p>
+  </div>
+</body>
+</html>

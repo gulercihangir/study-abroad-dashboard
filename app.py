@@ -1,18 +1,22 @@
 import os
+import secrets
+from datetime import datetime, timedelta
 import requests
+import resend
 from google import genai
 from dotenv import load_dotenv
-from flask import Flask, redirect, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
-import resend 
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+
 load_dotenv()
 
 app = Flask(__name__)
+
 database_url = os.environ.get("DATABASE_URL", "sqlite:///universities.db")
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
@@ -20,10 +24,12 @@ if database_url.startswith("postgres://"):
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-to-something-random")
 db = SQLAlchemy(app)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
-gemini_client = genai.Client()  # reads GEMINI_API_KEY from .env automatically
+
+gemini_client = genai.Client()
 resend.api_key = os.environ.get("RESEND_API_KEY")
 NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL")
 
@@ -64,13 +70,6 @@ def get_purchasing_power_context(country_name="Netherlands"):
 
 
 def evaluate_motivation_letter(letter_text):
-    """
-    Gives GENERAL, first-look feedback only — structure, clarity, completeness.
-    Deliberately not a deep, personalized, application-specific review —
-    that's reserved for the paid consulting service.
-    Uses Gemini (gemini-2.5-flash) — check aistudio.google.com for current
-    free-tier model eligibility if you swap the model name later.
-    """
     prompt = f"""You are giving a student general, first-look feedback on their university
 motivation letter / personal statement draft. This is a light structural and clarity
 check, NOT a deep personalized review.
@@ -108,6 +107,7 @@ class University(db.Model):
     teaching_style = db.Column(db.Text)
     career_focus = db.Column(db.Text)
     campus_type = db.Column(db.String(50))
+    social_scene = db.Column(db.Text)
 
     programs = db.relationship("Program", backref="university", lazy=True, cascade="all, delete-orphan")
 
@@ -126,17 +126,125 @@ class Program(db.Model):
 
     def __repr__(self):
         return f"{self.major} @ {self.university.name if self.university else '?'}"
-    
-class ConsultationLead(db.Model):
+
+
+class Consultant(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200))
-    email = db.Column(db.String(200))
-    message = db.Column(db.Text)
-    program_interest = db.Column(db.String(300))  # which result they clicked from
-    submitted_at = db.Column(db.DateTime, server_default=db.func.now())
+    name = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(200), unique=True, nullable=False)
+    password_hash = db.Column(db.String(300), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    students = db.relationship("Student", backref="consultant", lazy=True, foreign_keys="Student.consultant_id")
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def get_id(self):
+        return f"c-{self.id}"
 
     def __repr__(self):
         return f"{self.name} ({self.email})"
+
+
+class Student(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(200), unique=True, nullable=False)
+    password_hash = db.Column(db.String(300), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+    reset_token = db.Column(db.String(100))
+    reset_token_expiry = db.Column(db.DateTime)
+    consultant_id = db.Column(db.Integer, db.ForeignKey("consultant.id"), nullable=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def generate_reset_token(self):
+        self.reset_token = secrets.token_urlsafe(32)
+        self.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
+        return self.reset_token
+
+    def verify_reset_token(self, token):
+        return (
+            self.reset_token == token
+            and self.reset_token_expiry
+            and self.reset_token_expiry > datetime.utcnow()
+        )
+
+    def get_id(self):
+        return f"s-{self.id}"
+
+    def __repr__(self):
+        return f"{self.name} ({self.email})"
+
+
+class ConsultationLead(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=True)
+    name = db.Column(db.String(200))
+    email = db.Column(db.String(200))
+    message = db.Column(db.Text)
+    program_interest = db.Column(db.String(300))
+    submitted_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    student = db.relationship("Student", backref="consultation_leads")
+
+    def __repr__(self):
+        return f"{self.name} ({self.email})"
+
+
+class SavedAnswers(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False)
+    major = db.Column(db.String(200))
+    max_budget = db.Column(db.Float)
+    region = db.Column(db.String(200))
+    learning_style = db.Column(db.String(50))
+    career_goal = db.Column(db.String(50))
+    campus_type = db.Column(db.String(50))
+    social_scene = db.Column(db.String(50))
+    priority_major = db.Column(db.Float)
+    priority_cost = db.Column(db.Float)
+    priority_region = db.Column(db.Float)
+    diploma_type = db.Column(db.String(50))
+    saved_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    student = db.relationship("Student", backref="saved_answers")
+
+    def __repr__(self):
+        return f"{self.major} for {self.student.name if self.student else '?'}"
+
+
+class ChecklistItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False)
+    title = db.Column(db.String(300), nullable=False)
+    done = db.Column(db.Boolean, default=False)
+    visible_to_student = db.Column(db.Boolean, default=True)
+    due_date = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    student = db.relationship("Student", backref="checklist_items")
+
+    def __repr__(self):
+        return self.title
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    if user_id.startswith("s-"):
+        return Student.query.get(int(user_id[2:]))
+    if user_id.startswith("c-"):
+        return Consultant.query.get(int(user_id[2:]))
+    return None
+
 
 class UniversityAdmin(ModelView):
     form_choices = {
@@ -160,26 +268,11 @@ class ProgramAdmin(ModelView):
     }
     column_list = ["major", "university", "application_deadline", "numerus_fixus"]
 
-class Student(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    email = db.Column(db.String(200), unique=True, nullable=False)
-    password_hash = db.Column(db.String(300), nullable=False)
-    created_at = db.Column(db.DateTime, server_default=db.func.now())
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+class StudentAdmin(ModelView):
+    column_list = ["name", "email", "consultant", "created_at"]
+    form_columns = ["name", "email", "consultant"]
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    def __repr__(self):
-        return f"{self.name} ({self.email})"
-
-
-@login_manager.user_loader
-def load_user(user_id):
-    return Student.query.get(int(user_id))
 
 TEACHING_STYLE_KEYWORDS = {
     "hands_on": ["hands-on", "hands on", "project-based", "labs", "practical"],
@@ -195,104 +288,143 @@ CAREER_FOCUS_KEYWORDS = {
     "public_service": ["public sector", "government", "ngo", "nonprofit", "social impact"],
 }
 
+SOCIAL_SCENE_KEYWORDS = {
+    "lively": ["lively", "vibrant", "nightlife", "student associations", "party", "social"],
+    "quiet": ["quiet", "studious", "calm", "peaceful", "academic focus"],
+}
+
 
 def score_program(program, university, answers):
-    score = 0
-    max_score = 0
     reasons = []
+    scores = {}
 
-    max_score += 25
     desired_major = (answers.get("major") or "").strip().lower()
     program_major = (program.major or "").lower()
     if desired_major and desired_major == program_major:
-        score += 25
+        scores["major"] = 100
         reasons.append(f"Exact match for '{answers.get('major')}'")
     elif desired_major and desired_major in program_major:
-        score += 15
+        scores["major"] = 60
         reasons.append(f"'{answers.get('major')}' is part of this program, but it's not a dedicated program")
     else:
+        scores["major"] = 0
         reasons.append(f"Could not confirm this program matches '{answers.get('major')}'")
 
-    max_score += 20
     try:
         budget = float(answers.get("max_budget", 0) or 0)
     except (ValueError, TypeError):
         budget = 0
     total_cost = (university.cost_of_living_monthly or 0) + (university.rent_estimate_monthly or 0)
-
     if budget > 0 and total_cost > 0:
         if total_cost <= budget:
             savings_ratio = (budget - total_cost) / budget
-            score += 13 + min(savings_ratio * 7, 7)
+            scores["cost"] = 65 + min(savings_ratio * 35, 35)
             reasons.append(f"Estimated monthly cost (€{total_cost:.0f}) fits within your €{budget:.0f} budget")
         else:
             over_ratio = (total_cost - budget) / budget
-            penalty = min(over_ratio * 20, 20)
-            score += max(13 - penalty, 0)
+            penalty = min(over_ratio * 100, 65)
+            scores["cost"] = max(65 - penalty, 0)
             reasons.append(f"Estimated monthly cost (€{total_cost:.0f}) exceeds your €{budget:.0f} budget")
     else:
+        scores["cost"] = 50
         reasons.append("Cost data incomplete for this university")
 
-    max_score += 10
     preferred_region = (answers.get("region") or "").strip().lower()
     uni_region = (university.region or "").lower()
     if not preferred_region or preferred_region == "no preference":
-        score += 10
+        scores["region"] = 100
         reasons.append("No region preference specified")
     elif preferred_region in uni_region:
-        score += 10
+        scores["region"] = 100
         reasons.append(f"Located in your preferred region ({university.region})")
     else:
+        scores["region"] = 20
         reasons.append(f"Located in {university.region}, outside your stated preference")
 
-    max_score += 15
     transport = university.transport_score or 5
-    score += (transport / 10) * 15
+    scores["transport"] = transport * 10
     reasons.append(f"Transport accessibility score: {transport}/10")
 
-    max_score += 10
     learning_style = answers.get("learning_style")
     if learning_style:
         keywords = TEACHING_STYLE_KEYWORDS.get(learning_style, [])
         text = (university.teaching_style or "").lower()
         if any(kw in text for kw in keywords):
-            score += 10
+            scores["teaching_style"] = 100
             reasons.append("Matches your preferred learning style")
         else:
+            scores["teaching_style"] = 30
             reasons.append("Could not confirm a match for your learning style preference")
     else:
-        score += 10
+        scores["teaching_style"] = 100
         reasons.append("No learning style preference specified")
 
-    max_score += 10
     career_goal = answers.get("career_goal")
     if career_goal:
         keywords = CAREER_FOCUS_KEYWORDS.get(career_goal, [])
         text = (university.career_focus or "").lower()
         if any(kw in text for kw in keywords):
-            score += 10
+            scores["career_focus"] = 100
             reasons.append("Matches your career goal")
         else:
+            scores["career_focus"] = 30
             reasons.append("Could not confirm a match for your stated career goal")
     else:
-        score += 10
+        scores["career_focus"] = 100
         reasons.append("No career goal specified")
 
-    max_score += 10
     campus_pref = (answers.get("campus_type") or "").strip().lower()
     uni_campus = (university.campus_type or "").strip().lower()
     if not campus_pref:
-        score += 10
+        scores["campus_type"] = 100
         reasons.append("No campus environment preference specified")
     elif campus_pref == uni_campus:
-        score += 10
+        scores["campus_type"] = 100
         reasons.append("Matches your preferred campus environment")
     else:
+        scores["campus_type"] = 30
         reasons.append("Different campus environment than your preference")
 
-    percentage_score = round((score / max_score) * 100, 1) if max_score else 0
+    social_pref = answers.get("social_scene")
+    if social_pref and social_pref != "no_preference":
+        keywords = SOCIAL_SCENE_KEYWORDS.get(social_pref, [])
+        text = (university.social_scene or "").lower()
+        if any(kw in text for kw in keywords):
+            scores["social_scene"] = 100
+            reasons.append("Matches your preferred student-life vibe")
+        else:
+            scores["social_scene"] = 40
+            reasons.append("Could not confirm a match for your preferred student-life vibe")
+    else:
+        scores["social_scene"] = 100
+        reasons.append("No student-life preference specified")
 
-    return {"program": program, "university": university, "score": percentage_score, "reasons": reasons}
+    fixed_dims = ["transport", "teaching_style", "career_focus", "campus_type", "social_scene"]
+    fixed_weight_each = 40 / len(fixed_dims)
+
+    try:
+        p_major = float(answers.get("priority_major", 5) or 5)
+        p_cost = float(answers.get("priority_cost", 5) or 5)
+        p_region = float(answers.get("priority_region", 5) or 5)
+    except (ValueError, TypeError):
+        p_major, p_cost, p_region = 5, 5, 5
+
+    slider_sum = p_major + p_cost + p_region
+    if slider_sum <= 0:
+        p_major, p_cost, p_region, slider_sum = 1, 1, 1, 3
+
+    weight_major = 60 * (p_major / slider_sum)
+    weight_cost = 60 * (p_cost / slider_sum)
+    weight_region = 60 * (p_region / slider_sum)
+
+    total_score = (
+        scores["major"] * (weight_major / 100)
+        + scores["cost"] * (weight_cost / 100)
+        + scores["region"] * (weight_region / 100)
+        + sum(scores[d] * (fixed_weight_each / 100) for d in fixed_dims)
+    )
+
+    return {"program": program, "university": university, "score": round(total_score, 1), "reasons": reasons}
 
 
 @app.route("/")
@@ -331,6 +463,29 @@ def find_universities():
     })
 
 
+@app.route("/api/save-answers", methods=["POST"])
+@login_required
+def save_answers():
+    data = request.json
+    saved = SavedAnswers(
+        student_id=current_user.id,
+        major=data.get("major"),
+        max_budget=data.get("max_budget"),
+        region=data.get("region"),
+        learning_style=data.get("learning_style"),
+        career_goal=data.get("career_goal"),
+        campus_type=data.get("campus_type"),
+        social_scene=data.get("social_scene"),
+        priority_major=data.get("priority_major"),
+        priority_cost=data.get("priority_cost"),
+        priority_region=data.get("priority_region"),
+        diploma_type=data.get("diploma_type"),
+    )
+    db.session.add(saved)
+    db.session.commit()
+    return jsonify({"status": "saved"})
+
+
 @app.route("/api/evaluate-letter", methods=["POST"])
 def evaluate_letter():
     data = request.json
@@ -347,6 +502,8 @@ def evaluate_letter():
     except Exception as e:
         print("Error evaluating letter:", e)
         return jsonify({"error": "Something went wrong generating feedback. Check your API key and try again."}), 500
+
+
 @app.route("/api/consultation-interest", methods=["POST"])
 def consultation_interest():
     data = request.json
@@ -358,7 +515,13 @@ def consultation_interest():
     if not name or not email:
         return jsonify({"error": "Please provide your name and email."}), 400
 
-    lead = ConsultationLead(name=name, email=email, message=message, program_interest=program_interest)
+    lead = ConsultationLead(
+        name=name,
+        email=email,
+        message=message,
+        program_interest=program_interest,
+        student_id=current_user.id if current_user.is_authenticated and isinstance(current_user, Student) else None,
+    )
     db.session.add(lead)
     db.session.commit()
 
@@ -379,6 +542,9 @@ def consultation_interest():
             print("Email notification failed (lead was still saved):", e)
 
     return jsonify({"status": "received"})
+
+
+# ─── Student auth ───────────────────────────────────────────────────────────
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -426,11 +592,201 @@ def logout():
     logout_user()
     return redirect("/")
 
-admin = Admin(app, name="Study Abroad Dashboard Admin", theme=Bootstrap4Theme(swatch="cosmo"))
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        student = Student.query.filter_by(email=email).first()
+
+        if student:
+            token = student.generate_reset_token()
+            db.session.commit()
+            reset_url = f"{request.host_url}reset-password/{token}"
+
+            if resend.api_key:
+                try:
+                    resend.Emails.send({
+                        "from": "onboarding@resend.dev",
+                        "to": student.email,
+                        "subject": "Reset your password",
+                        "html": f"<p>Click to reset your password (expires in 1 hour):</p><p><a href='{reset_url}'>{reset_url}</a></p>",
+                    })
+                except Exception as e:
+                    print("Password reset email failed:", e)
+
+        return render_template("forgot_password.html", message="If that email is registered, a reset link has been sent.")
+
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    student = Student.query.filter_by(reset_token=token).first()
+
+    if not student or not student.verify_reset_token(token):
+        return render_template("reset_password.html", error="This reset link is invalid or has expired.", invalid=True)
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if not password:
+            return render_template("reset_password.html", error="Please enter a new password.", token=token)
+
+        student.set_password(password)
+        student.reset_token = None
+        student.reset_token_expiry = None
+        db.session.commit()
+        return redirect("/login")
+
+    return render_template("reset_password.html", token=token)
+
+
+# ─── Consultant auth + dashboard ────────────────────────────────────────────
+
+@app.route("/consultant/register", methods=["GET", "POST"])
+def consultant_register():
+    if request.method == "POST":
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if not name or not email or not password:
+            return render_template("consultant_register.html", error="Please fill in all fields.")
+
+        if Consultant.query.filter_by(email=email).first():
+            return render_template("consultant_register.html", error="An account with this email already exists.")
+
+        consultant = Consultant(name=name, email=email)
+        consultant.set_password(password)
+        db.session.add(consultant)
+        db.session.commit()
+
+        login_user(consultant)
+        return redirect("/consultant/dashboard")
+
+    return render_template("consultant_register.html")
+
+
+@app.route("/consultant/login", methods=["GET", "POST"])
+def consultant_login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        consultant = Consultant.query.filter_by(email=email).first()
+        if consultant and consultant.check_password(password):
+            login_user(consultant)
+            return redirect("/consultant/dashboard")
+
+        return render_template("consultant_login.html", error="Invalid email or password.")
+
+    return render_template("consultant_login.html")
+
+
+@app.route("/consultant/logout")
+@login_required
+def consultant_logout():
+    logout_user()
+    return redirect("/consultant/login")
+
+
+@app.route("/consultant/dashboard")
+@login_required
+def consultant_dashboard():
+    if not isinstance(current_user, Consultant):
+        return redirect("/")
+    students = Student.query.filter_by(consultant_id=current_user.id).all()
+    return render_template("consultant_dashboard.html", students=students)
+
+
+@app.route("/consultant/student/<int:student_id>", methods=["GET", "POST"])
+@login_required
+def consultant_student_detail(student_id):
+    if not isinstance(current_user, Consultant):
+        return redirect("/")
+
+    student = Student.query.get_or_404(student_id)
+    if student.consultant_id != current_user.id:
+        return "Not authorized to view this student.", 403
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        due_date = request.form.get("due_date", "").strip()
+        if title:
+            item = ChecklistItem(student_id=student.id, title=title, due_date=due_date, visible_to_student=True)
+            db.session.add(item)
+            db.session.commit()
+        return redirect(f"/consultant/student/{student_id}")
+
+    latest_profile = (
+        SavedAnswers.query.filter_by(student_id=student.id)
+        .order_by(SavedAnswers.saved_at.desc())
+        .first()
+    )
+    checklist = ChecklistItem.query.filter_by(student_id=student.id).order_by(ChecklistItem.created_at.asc()).all()
+
+    return render_template(
+        "consultant_student_detail.html",
+        student=student,
+        profile=latest_profile,
+        checklist=checklist,
+    )
+
+
+@app.route("/consultant/checklist/<int:item_id>/toggle", methods=["POST"])
+@login_required
+def toggle_checklist_item(item_id):
+    if not isinstance(current_user, Consultant):
+        return jsonify({"error": "Not authorized"}), 403
+
+    item = ChecklistItem.query.get_or_404(item_id)
+    if item.student.consultant_id != current_user.id:
+        return jsonify({"error": "Not authorized"}), 403
+
+    item.done = not item.done
+    db.session.commit()
+    return jsonify({"status": "ok", "done": item.done})
+
+
+@app.route("/consultant/checklist/<int:item_id>/visibility", methods=["POST"])
+@login_required
+def toggle_checklist_visibility(item_id):
+    if not isinstance(current_user, Consultant):
+        return jsonify({"error": "Not authorized"}), 403
+
+    item = ChecklistItem.query.get_or_404(item_id)
+    if item.student.consultant_id != current_user.id:
+        return jsonify({"error": "Not authorized"}), 403
+
+    item.visible_to_student = not item.visible_to_student
+    db.session.commit()
+    return jsonify({"status": "ok", "visible_to_student": item.visible_to_student})
+
+
+# ─── Student's own checklist view ───────────────────────────────────────────
+
+@app.route("/my-checklist")
+@login_required
+def my_checklist():
+    if not isinstance(current_user, Student):
+        return redirect("/")
+    items = (
+        ChecklistItem.query.filter_by(student_id=current_user.id, visible_to_student=True)
+        .order_by(ChecklistItem.created_at.asc())
+        .all()
+    )
+    return render_template("my_checklist.html", items=items)
+
+
+admin = Admin(app, name="Study Abroad Dashboard Admin", theme=Bootstrap4Theme(swatch="darkly"))
 admin.add_view(UniversityAdmin(University, db.session))
 admin.add_view(ProgramAdmin(Program, db.session))
 admin.add_view(ModelView(ConsultationLead, db.session))
-admin.add_view(ModelView(Student, db.session))
+admin.add_view(StudentAdmin(Student, db.session))
+admin.add_view(ModelView(Consultant, db.session))
+admin.add_view(ModelView(SavedAnswers, db.session))
+admin.add_view(ModelView(ChecklistItem, db.session))
+
 with app.app_context():
     db.create_all()
 

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Checklist — Study Abroad Matcher</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .done { text-decoration: line-through; color: var(--muted-foreground); }
+  </style>
+</head>
+<body>
+  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
+    Logged in as {{ current_user.name }} — <a href="/logout" style="color: var(--secondary);">Log out</a>
+  </div>
+
+  <a href="/" style="color: var(--secondary); font-size: 13px;">&larr; Back to dashboard</a>
+
+  <h1>My Application Checklist</h1>
+  <p>Shared with you by your consultant — this updates as they check things off.</p>
+
+  {% if items|length == 0 %}
+    <div class="letter-box">
+      <p>No checklist items yet. Once you're connected with a consultant, they'll add steps here for you to track.</p>
+    </div>
+  {% else %}
+    {% for item in items %}
+      <div class="result-card">
+        <div class="{% if item.done %}done{% endif %}">
+          {{ "✓ " if item.done else "" }}{{ item.title }}
+        </div>
+        {% if item.due_date %}<p style="font-size: 12px; color: var(--secondary); margin: 4px 0 0;">Due: {{ item.due_date }}</p>{% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+</body>
+</html>
