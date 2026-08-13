@@ -253,9 +253,14 @@ class UniversityAdmin(ModelView):
             ("medium", "Mid-size campus"),
             ("small_liberal", "Small liberal arts college"),
             ("online", "Online or hybrid"),
-        ]
+        ],
+        "social_scene": [
+            ("lively", "Lively & social"),
+            ("moderate", "Balanced"),
+            ("quiet", "Quiet & studious"),
+        ],
     }
-    column_list = ["name", "city", "region", "cost_of_living_monthly", "rent_estimate_monthly", "campus_type"]
+    column_list = ["name", "city", "region", "cost_of_living_monthly", "rent_estimate_monthly", "campus_type", "social_scene"]
     form_excluded_columns = ["programs"]
 
 
