@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Patika — Study Abroad Matching</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div style="text-align: center; margin-top: 40px;">
+    <h1 style="font-size: 42px; margin-bottom: 8px;">PATİKA</h1>
+    <p style="color: var(--secondary); font-size: 16px; margin-bottom: 60px;">
+      Doğru üniversiteyi, doğru bölümü, gerçek veriyle bulmanın hızlı ve şeffaf yolu
+    </p>
+
+    <div style="display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; max-width: 800px; margin: 0 auto;">
+
+      <a href="/find-university" style="text-decoration: none; color: inherit; flex: 1; min-width: 280px; max-width: 360px;">
+        <div class="result-card" style="text-align: left; height: 100%;">
+          <h3>🎓 Öğrenci Portalı</h3>
+          <p>Bölüm, bütçe ve tercihlerine göre en uygun üniversiteleri ücretsiz keşfet.</p>
+        </div>
+      </a>
+
+      <a href="/consultant/login" style="text-decoration: none; color: inherit; flex: 1; min-width: 280px; max-width: 360px;">
+        <div class="result-card" style="text-align: left; height: 100%;">
+          <h3>💼 Danışman Portalı</h3>
+          <p>Atanmış öğrencilerini takip et, checklist yönet, ilerlemeyi izle.</p>
+        </div>
+      </a>
+
+    </div>
+
+    <p style="margin-top: 40px; font-size: 13px; color: var(--muted-foreground);">
+      Zaten bir öğrenci hesabın var mı? <a href="/login" style="color: var(--secondary);">Giriş yap</a>
+    </p>
+  </div>
+</body>
+</html>

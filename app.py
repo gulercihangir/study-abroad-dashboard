@@ -433,6 +433,10 @@ def score_program(program, university, answers):
 
 
 @app.route("/")
+def landing():
+    return render_template("landing.html")
+
+@app.route("/find-university")
 def home():
     return render_template("index.html")
 
