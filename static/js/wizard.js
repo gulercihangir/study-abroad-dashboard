@@ -285,6 +285,7 @@ function startOver() {
   document.getElementById("major-slider-value").textContent = "5";
   document.getElementById("cost-slider-value").textContent = "5";
   document.getElementById("region-slider-value").textContent = "5";
+  initSliderFills();
 
   document.getElementById("results-container").innerHTML = "";
   document.getElementById("next-steps").classList.add("hidden");
@@ -307,4 +308,40 @@ function startOver() {
 function showStep(stepNumber) {
   document.querySelectorAll(".wizard-step").forEach(el => el.classList.add("hidden"));
   document.getElementById(`step-${stepNumber}`).classList.remove("hidden");
+  updateWizardProgress(stepNumber);
 }
+
+function updateWizardProgress(stepNumber) {
+  const progress = document.getElementById("wizard-progress");
+  const totalSteps = 9;
+
+  if (stepNumber > totalSteps) {
+    progress.classList.add("hidden");
+    return;
+  }
+  progress.classList.remove("hidden");
+
+  document.getElementById("wizard-step-current").textContent = stepNumber;
+  document.getElementById("wizard-progress-fill").style.width = `${(stepNumber / totalSteps) * 100}%`;
+
+  document.querySelectorAll(".wizard-progress-dot").forEach(dot => {
+    const dotStep = Number(dot.dataset.step);
+    dot.classList.toggle("is-done", dotStep < stepNumber);
+    dot.classList.toggle("is-active", dotStep === stepNumber);
+  });
+}
+
+function updateSliderFill(input, valueSpanId) {
+  document.getElementById(valueSpanId).textContent = input.value;
+  const pct = ((input.value - input.min) / (input.max - input.min)) * 100;
+  input.style.setProperty("--range-progress", `${pct}%`);
+}
+
+function initSliderFills() {
+  document.querySelectorAll('input[type="range"]').forEach(input => {
+    const pct = ((input.value - input.min) / (input.max - input.min)) * 100;
+    input.style.setProperty("--range-progress", `${pct}%`);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initSliderFills);

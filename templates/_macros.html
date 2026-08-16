@@ -1,0 +1,77 @@
+{% macro brand_mark(size=32, grad_id='bmDefault') %}
+<svg class="brand-mark" width="{{ size }}" height="{{ size }}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+  <path d="M4 25c3.2 0 6.6-.6 8-4s-1-6.4 1-9.6S19.2 8 20.7 11.2s-2 6.2 1 8.7 6.6.9 6.6.9"
+        stroke="url(#{{ grad_id }})" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="4" cy="25" r="2.4" fill="var(--secondary)"/>
+  <circle cx="28.3" cy="20.8" r="3" fill="url(#{{ grad_id }})"/>
+  <defs>
+    <linearGradient id="{{ grad_id }}" x1="2" y1="26" x2="30" y2="7" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--secondary)"/>
+      <stop offset="1" stop-color="var(--primary)"/>
+    </linearGradient>
+  </defs>
+</svg>
+{% endmacro %}
+
+{% macro initials(name) -%}
+{{ name.split(' ')|map('first')|join('')|upper|truncate(2, True, '') }}
+{%- endmacro %}
+
+{% macro crm_topbar(consultant, stats) %}
+<div class="crm-topbar">
+  <a class="brand-lockup" href="/consultant/dashboard">
+    {{ brand_mark(26, 'bmCrm') }}
+    <span class="brand-wordmark">PATİKA <span style="color: var(--muted-foreground); font-weight: 500;">CRM</span></span>
+  </a>
+  <div class="crm-topbar-stats">
+    <span><strong>{{ stats.total_students }}</strong> Active Students</span>
+    <span class="crm-topbar-divider"></span>
+    <span><strong>{{ stats.due_this_week }}</strong> Applications Due This Week</span>
+  </div>
+  <div class="crm-topbar-account">
+    <a href="/admin/university/" class="secondary-btn crm-manage-btn">🏫 Manage Universities</a>
+    <div class="crm-topbar-account-text">
+      <div class="crm-account-name">{{ consultant.name }}</div>
+      <a href="/consultant/logout">Log out</a>
+    </div>
+    <div class="crm-avatar">{{ initials(consultant.name) }}</div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro crm_sidebar(student_cards, active_student_id) %}
+<aside class="crm-sidebar">
+  <h2>Assigned Students ({{ student_cards|length }})</h2>
+  <div class="crm-search">
+    <input type="text" id="crm-student-search" placeholder="Search students…" oninput="crmFilterStudents(this.value)">
+  </div>
+  <div class="crm-student-list" id="crm-student-list">
+    {% for card in student_cards %}
+      <a href="/consultant/student/{{ card.student.id }}"
+         class="crm-student-item {% if card.student.id == active_student_id %}is-active{% endif %}"
+         data-name="{{ card.student.name|lower }}">
+        <div class="crm-student-avatar">{{ initials(card.student.name) }}</div>
+        <div class="crm-student-item-text">
+          <div class="crm-student-name">{{ card.student.name }}</div>
+          <div class="crm-student-sub">
+            {% if not card.has_profile %}Awaiting questionnaire
+            {% elif card.checklist_total == 0 %}Profile ready
+            {% elif card.checklist_done == card.checklist_total %}Checklist complete
+            {% else %}{{ card.checklist_done }}/{{ card.checklist_total }} tasks done{% endif %}
+          </div>
+        </div>
+      </a>
+    {% else %}
+      <p style="font-size: 12px; margin: 4px 2px;">No students assigned yet.</p>
+    {% endfor %}
+  </div>
+</aside>
+<script>
+  function crmFilterStudents(query) {
+    const q = query.trim().toLowerCase();
+    document.querySelectorAll('#crm-student-list .crm-student-item').forEach(function (el) {
+      el.style.display = el.dataset.name.includes(q) ? '' : 'none';
+    });
+  }
+</script>
+{% endmacro %}

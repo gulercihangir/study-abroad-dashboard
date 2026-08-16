@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Log In — Study Abroad Matcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
@@ -21,6 +24,7 @@
     </form>
 
     <p style="margin-top: 16px;">Don't have an account? <a href="/register" style="color: var(--secondary);">Sign up</a></p>
+    <p style="margin-top: 4px;"><a href="/forgot-password" style="color: var(--secondary);">Forgot your password?</a></p>
   </div>
 </body>
 </html>

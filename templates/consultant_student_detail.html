@@ -2,78 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ student.name }} — Consultant Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
-    Logged in as {{ current_user.name }} — <a href="/consultant/logout" style="color: var(--secondary);">Log out</a>
-  </div>
+<body class="crm-page">
+  {% import '_macros.html' as macros %}
 
-  <a href="/consultant/dashboard" style="color: var(--secondary); font-size: 13px;">&larr; Back to my students</a>
+  {{ macros.crm_topbar(current_user, stats) }}
 
-  <h1>{{ student.name }}</h1>
-  <p>{{ student.email }}</p>
+  <div class="crm-shell">
+    {{ macros.crm_sidebar(student_cards, active_student_id) }}
 
-  <div class="pp-box">
-    <h3>Student Profile</h3>
-    {% if profile %}
-      <div class="pp-grid" style="grid-template-columns: repeat(3, 1fr);">
-        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.major or "—" }}</div><div class="pp-label">Major</div></div>
-        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">€{{ profile.max_budget or "—" }}</div><div class="pp-label">Budget</div></div>
-        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.region or "No preference" }}</div><div class="pp-label">Region</div></div>
-        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.learning_style or "—" }}</div><div class="pp-label">Learning style</div></div>
-        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.career_goal or "—" }}</div><div class="pp-label">Career goal</div></div>
-        <div class="pp-stat"><div class="pp-value" style="font-size: 13px;">{{ profile.diploma_type or "—" }}</div><div class="pp-label">Diploma</div></div>
+    <main class="crm-main">
+      <a href="/consultant/dashboard" style="color: var(--secondary); font-size: 13px;">&larr; Back to overview</a>
+
+      <div class="crm-student-header" style="margin-top: 12px;">
+        <div class="crm-avatar" style="width: 44px; height: 44px; font-size: 15px;">{{ macros.initials(student.name) }}</div>
+        <div>
+          <h1>{{ student.name }}</h1>
+          <p style="margin: 2px 0 0; font-size: 13px;">{{ student.email }}</p>
+        </div>
       </div>
-      <p class="pp-source">Saved on {{ profile.saved_at.strftime("%d %b %Y") }}</p>
-    {% else %}
-      <p>This student hasn't saved their questionnaire results yet.</p>
-    {% endif %}
-  </div>
 
-  <div class="letter-box">
-    <h3>Admission Checklist</h3>
-
-    <div id="checklist-list">
-      {% for item in checklist %}
-        <div class="result-card" id="item-{{ item.id }}" style="display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <input type="checkbox" class="check-item" data-id="{{ item.id }}" {% if item.done %}checked="checked"{% endif %} style="width: 20px; height: 20px;">
-            <div style="flex: 1;">
-              <div {% if item.done %}style="text-decoration: line-through; color: var(--muted-foreground);"{% endif %}>{{ item.title }}</div>
-              {% if item.due_date %}<div style="font-size: 11px; color: var(--secondary);">Due: {{ item.due_date }}</div>{% endif %}
+      <div class="crm-panel">
+        <div class="crm-panel-header">
+          <h2>Student Profile</h2>
+          {% if profile %}<span class="crm-panel-header-meta">Intake form completed {{ profile.saved_at.strftime("%d %b %Y") }}</span>{% endif %}
+        </div>
+        {% if profile %}
+          <div class="chip-row" style="margin-top: 12px;">
+            <div class="profile-chip">
+              <div class="profile-chip-label">🎓 Intended Major</div>
+              <div class="profile-chip-value">{{ profile.major or "—" }}</div>
+            </div>
+            <div class="profile-chip">
+              <div class="profile-chip-label">💶 Monthly Budget</div>
+              <div class="profile-chip-value">{{ "€%s"|format(profile.max_budget|int) if profile.max_budget else "—" }}</div>
+            </div>
+            <div class="profile-chip">
+              <div class="profile-chip-label">📍 Preferred Region</div>
+              <div class="profile-chip-value">{{ profile.region or "No preference" }}</div>
+            </div>
+            <div class="profile-chip">
+              <div class="profile-chip-label">📘 Learning Style</div>
+              <div class="profile-chip-value">{{ profile.learning_style or "—" }}</div>
+            </div>
+            <div class="profile-chip">
+              <div class="profile-chip-label">🎯 Career Goal</div>
+              <div class="profile-chip-value">{{ profile.career_goal or "—" }}</div>
             </div>
           </div>
-          <button class="secondary-btn" onclick="toggleVisibility('{{ item.id }}', this)" style="font-size: 11px; padding: 6px 12px;">
-            {% if item.visible_to_student %}👁 Student Viewable{% else %}🔒 Internal Note{% endif %}
-          </button>
-        </div>
-      {% endfor %}
-    </div>
+        {% else %}
+          <p>This student hasn't saved their questionnaire results yet.</p>
+        {% endif %}
+      </div>
 
-    <form method="POST" style="margin-top: 20px;">
-      <input type="text" name="title" placeholder="New checklist item (e.g. Submit TU Delft application)" required />
-      <input type="text" name="due_date" placeholder="Due date (optional, e.g. 15 January 2026)" />
-      <br>
-      <button type="submit">+ Add Item</button>
-    </form>
+      <div class="crm-panel">
+        <div class="crm-panel-header">
+          <h2>Admission Checklist</h2>
+          <span class="crm-panel-header-meta">
+            {% set done_count = checklist|selectattr("done")|list|length %}
+            {{ done_count }}/{{ checklist|length }} Completed
+          </span>
+        </div>
+
+        <div class="milestone-list" id="checklist-list">
+          {% for item in checklist %}
+            <div class="milestone-item" id="item-{{ item.id }}">
+              <div class="milestone-main">
+                <input type="checkbox" class="milestone-checkbox check-item" data-id="{{ item.id }}" {% if item.done %}checked="checked"{% endif %}>
+                <div>
+                  <div class="milestone-title {% if item.done %}is-done{% endif %}">{{ item.title }}</div>
+                  {% if item.due_date %}<div class="milestone-due">Due: {{ item.due_date }}</div>{% endif %}
+                </div>
+              </div>
+              <button class="secondary-btn" onclick="toggleVisibility('{{ item.id }}', this)" style="font-size: 11px; padding: 6px 12px; margin: 0; flex-shrink: 0;">
+                {% if item.visible_to_student %}👁 Student Viewable{% else %}🔒 Internal Note{% endif %}
+              </button>
+            </div>
+          {% else %}
+            <p style="font-size: 13px;">No checklist items yet — add the first milestone below.</p>
+          {% endfor %}
+        </div>
+
+        <form method="POST" style="margin-top: 20px;">
+          <input type="text" name="title" placeholder="New checklist item (e.g. Submit TU Delft application)" required />
+          <input type="text" name="due_date" placeholder="Due date (optional, e.g. 15 January 2026)" />
+          <br>
+          <button type="submit">+ Add Milestone</button>
+        </form>
+      </div>
+
+      <div class="crm-panel">
+        <div class="crm-panel-header">
+          <h2>Documents</h2>
+          <span class="crm-panel-header-meta">{{ documents|length }} uploaded</span>
+        </div>
+        {% if documents|length == 0 %}
+          <p>No documents uploaded by this student yet.</p>
+        {% else %}
+          <div class="doc-list">
+            {% for doc in documents %}
+              <div class="doc-item">
+                <div>
+                  <div class="doc-item-name">{{ doc.original_filename }}</div>
+                  <div class="doc-item-meta">Uploaded {{ doc.uploaded_at.strftime("%d %b %Y") }}</div>
+                </div>
+                <a href="/documents/{{ doc.id }}/download">Download</a>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </main>
   </div>
 
   <script>
-    function toggleDone(itemId) {
-      fetch(`/consultant/checklist/${itemId}/toggle`, { method: "POST" })
-        .then(res => res.json())
-        .then(() => location.reload());
-    }
-
     function toggleVisibility(itemId, btn) {
       fetch(`/consultant/checklist/${itemId}/visibility`, { method: "POST" })
         .then(res => res.json())
         .then(() => location.reload());
     }
 
-    // attach handlers for checkboxes (avoid inline onclick with templating)
     document.querySelectorAll('.check-item').forEach(cb => {
       cb.addEventListener('click', function() {
         const itemId = this.getAttribute('data-id');

@@ -1,38 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Patika — Study Abroad Matching</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-  <div style="text-align: center; margin-top: 40px;">
-    <h1 style="font-size: 42px; margin-bottom: 8px;">PATİKA</h1>
-    <p style="color: var(--secondary); font-size: 16px; margin-bottom: 60px;">
-      Doğru üniversiteyi, doğru bölümü, gerçek veriyle bulmanın hızlı ve şeffaf yolu
-    </p>
+<body class="landing-page">
+  {% import '_macros.html' as macros %}
 
-    <div style="display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; max-width: 800px; margin: 0 auto;">
+  <nav class="landing-nav">
+    <a class="brand-lockup" href="/">
+      {{ macros.brand_mark(30, 'bmNav') }}
+      <span class="brand-wordmark">PATİKA</span>
+    </a>
+    <a class="secondary-btn" href="/login">Giriş yap</a>
+  </nav>
 
-      <a href="/find-university" style="text-decoration: none; color: inherit; flex: 1; min-width: 280px; max-width: 360px;">
-        <div class="result-card" style="text-align: left; height: 100%;">
-          <h3>🎓 Öğrenci Portalı</h3>
-          <p>Bölüm, bütçe ve tercihlerine göre en uygun üniversiteleri ücretsiz keşfet.</p>
+  <section class="hero">
+    <div class="hero-glow"></div>
+    <div class="hero-grid">
+      <div>
+        <div class="hero-eyebrow">Gerçek veriyle, adım adım</div>
+        <h1>Doğru üniversiteyi,<br>doğru bölümü,<br><span>gerçek veriyle</span> bul.</h1>
+        <p class="hero-sub">
+          Bütçenden ders çalışma tarzına kadar 9 kısa soruyla seni Hollanda'daki en uygun
+          üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, karşılaştırılabilir veri.
+        </p>
+        <div class="trust-row">
+          <span class="trust-item">Ücretsiz eşleşme</span>
+          <span class="trust-item">Gerçek maliyet verisi</span>
+          <span class="trust-item">Şeffaf süreç</span>
         </div>
-      </a>
+      </div>
 
-      <a href="/consultant/login" style="text-decoration: none; color: inherit; flex: 1; min-width: 280px; max-width: 360px;">
-        <div class="result-card" style="text-align: left; height: 100%;">
-          <h3>💼 Danışman Portalı</h3>
-          <p>Atanmış öğrencilerini takip et, checklist yönet, ilerlemeyi izle.</p>
-        </div>
-      </a>
+      <div class="hero-visual" aria-hidden="true">
+        <svg class="hero-trail-svg" viewBox="0 0 280 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="heroTrail" x1="20" y1="360" x2="240" y2="20" gradientUnits="userSpaceOnUse">
+              <stop stop-color="var(--secondary)"/>
+              <stop offset="1" stop-color="var(--primary)"/>
+            </linearGradient>
+          </defs>
+          <path d="M40 350 C 130 340 150 300 110 260 C 70 220 10 210 40 170 C 65 138 170 150 190 110 C 205 80 170 60 200 35"
+                stroke="url(#heroTrail)" stroke-width="3" stroke-linecap="round" stroke-dasharray="1 14" />
+          <path d="M40 350 C 130 340 150 300 110 260 C 70 220 10 210 40 170 C 65 138 170 150 190 110 C 205 80 170 60 200 35"
+                stroke="url(#heroTrail)" stroke-width="1" stroke-linecap="round" opacity="0.35" />
 
+          <circle cx="40" cy="350" r="5" fill="var(--secondary)"/>
+          <text x="54" y="354" class="hero-waypoint-label">BÖLÜM</text>
+
+          <circle cx="110" cy="260" r="4.5" fill="var(--foreground)" fill-opacity="0.85"/>
+          <text x="122" y="264" class="hero-waypoint-label">BÜTÇE</text>
+
+          <circle cx="40" cy="170" r="4.5" fill="var(--foreground)" fill-opacity="0.85"/>
+          <text x="54" y="174" class="hero-waypoint-label">ŞEHİR</text>
+
+          <circle cx="190" cy="110" r="4.5" fill="var(--foreground)" fill-opacity="0.85"/>
+          <text x="202" y="114" class="hero-waypoint-label">TERCİH</text>
+
+          <circle cx="200" cy="35" r="7" fill="url(#heroTrail)"/>
+          <text x="196" y="16" class="hero-waypoint-label" style="font-weight:600;">EŞLEŞME</text>
+        </svg>
+      </div>
     </div>
+  </section>
 
-    <p style="margin-top: 40px; font-size: 13px; color: var(--muted-foreground);">
-      Zaten bir öğrenci hesabın var mı? <a href="/login" style="color: var(--secondary);">Giriş yap</a>
-    </p>
-  </div>
+  <section class="portal-section">
+    <div class="portal-grid">
+      <a class="portal-card" href="/find-university">
+        <span class="portal-icon">🎓</span>
+        <h3>Öğrenci Portalı</h3>
+        <p>Bölüm, bütçe ve tercihlerine göre en uygun üniversiteleri ücretsiz keşfet.</p>
+        <span class="portal-cta">Keşfetmeye başla →</span>
+      </a>
+
+      <a class="portal-card" href="/consultant/login">
+        <span class="portal-icon">💼</span>
+        <h3>Danışman Portalı</h3>
+        <p>Atanmış öğrencilerini takip et, checklist yönet, ilerlemeyi izle.</p>
+        <span class="portal-cta">Panele git →</span>
+      </a>
+    </div>
+  </section>
+
+  <footer class="landing-footer">
+    Zaten bir öğrenci hesabın var mı? <a href="/login">Giriş yap</a>
+  </footer>
 </body>
 </html>

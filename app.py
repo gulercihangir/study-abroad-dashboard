@@ -5,13 +5,14 @@ import requests
 import resend
 from google import genai
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, redirect
+from flask import Flask, render_template, request, jsonify, redirect, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from flask_admin import Admin
+from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -23,7 +24,20 @@ if database_url.startswith("postgres://"):
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-to-something-random")
+app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB per upload
 db = SQLAlchemy(app)
+
+ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "doc", "docx", "jpg", "jpeg", "png"}
+
+
+def allowed_document(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_DOCUMENT_EXTENSIONS
+
+
+def student_upload_dir(student_id):
+    path = os.path.join(app.instance_path, "uploads", str(student_id))
+    os.makedirs(path, exist_ok=True)
+    return path
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -134,6 +148,8 @@ class Consultant(UserMixin, db.Model):
     email = db.Column(db.String(200), unique=True, nullable=False)
     password_hash = db.Column(db.String(300), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    reset_token = db.Column(db.String(100))
+    reset_token_expiry = db.Column(db.DateTime)
 
     students = db.relationship("Student", backref="consultant", lazy=True, foreign_keys="Student.consultant_id")
 
@@ -142,6 +158,18 @@ class Consultant(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def generate_reset_token(self):
+        self.reset_token = secrets.token_urlsafe(32)
+        self.reset_token_expiry = datetime.utcnow() + timedelta(hours=1)
+        return self.reset_token
+
+    def verify_reset_token(self, token):
+        return (
+            self.reset_token == token
+            and self.reset_token_expiry
+            and self.reset_token_expiry > datetime.utcnow()
+        )
 
     def get_id(self):
         return f"c-{self.id}"
@@ -237,6 +265,19 @@ class ChecklistItem(db.Model):
         return self.title
 
 
+class Document(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False)
+    filename = db.Column(db.String(300), nullable=False)
+    original_filename = db.Column(db.String(300), nullable=False)
+    uploaded_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    student = db.relationship("Student", backref="documents")
+
+    def __repr__(self):
+        return self.original_filename
+
+
 @login_manager.user_loader
 def load_user(user_id):
     if user_id.startswith("s-"):
@@ -246,7 +287,23 @@ def load_user(user_id):
     return None
 
 
-class UniversityAdmin(ModelView):
+class ConsultantAccessMixin:
+    def is_accessible(self):
+        return isinstance(current_user, Consultant) and current_user.is_authenticated
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect("/consultant/login")
+
+
+class SecureAdminIndexView(ConsultantAccessMixin, AdminIndexView):
+    pass
+
+
+class SecureModelView(ConsultantAccessMixin, ModelView):
+    pass
+
+
+class UniversityAdmin(ConsultantAccessMixin, ModelView):
     form_choices = {
         "campus_type": [
             ("large_urban", "Large urban university"),
@@ -264,7 +321,7 @@ class UniversityAdmin(ModelView):
     form_excluded_columns = ["programs"]
 
 
-class ProgramAdmin(ModelView):
+class ProgramAdmin(ConsultantAccessMixin, ModelView):
     form_choices = {
         "numerus_fixus": [
             ("yes", "Yes — restricted enrollment"),
@@ -274,7 +331,7 @@ class ProgramAdmin(ModelView):
     column_list = ["major", "university", "application_deadline", "numerus_fixus"]
 
 
-class StudentAdmin(ModelView):
+class StudentAdmin(ConsultantAccessMixin, ModelView):
     column_list = ["name", "email", "consultant", "created_at"]
     form_columns = ["name", "email", "consultant"]
 
@@ -624,9 +681,9 @@ def forgot_password():
                 except Exception as e:
                     print("Password reset email failed:", e)
 
-        return render_template("forgot_password.html", message="If that email is registered, a reset link has been sent.")
+        return render_template("student_forgot_password.html", message="If that email is registered, a reset link has been sent.")
 
-    return render_template("forgot_password.html")
+    return render_template("student_forgot_password.html")
 
 
 @app.route("/reset-password/<token>", methods=["GET", "POST"])
@@ -634,12 +691,12 @@ def reset_password(token):
     student = Student.query.filter_by(reset_token=token).first()
 
     if not student or not student.verify_reset_token(token):
-        return render_template("reset_password.html", error="This reset link is invalid or has expired.", invalid=True)
+        return render_template("student_reset_password.html", error="This reset link is invalid or has expired.", invalid=True)
 
     if request.method == "POST":
         password = request.form.get("password", "")
         if not password:
-            return render_template("reset_password.html", error="Please enter a new password.", token=token)
+            return render_template("student_reset_password.html", error="Please enter a new password.", token=token)
 
         student.set_password(password)
         student.reset_token = None
@@ -647,10 +704,118 @@ def reset_password(token):
         db.session.commit()
         return redirect("/login")
 
-    return render_template("reset_password.html", token=token)
+    return render_template("student_reset_password.html", token=token)
+
+
+# ─── Consultant password reset ──────────────────────────────────────────────
+
+@app.route("/consultant/forgot-password", methods=["GET", "POST"])
+def consultant_forgot_password():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        consultant = Consultant.query.filter_by(email=email).first()
+
+        if consultant:
+            token = consultant.generate_reset_token()
+            db.session.commit()
+            reset_url = f"{request.host_url}consultant/reset-password/{token}"
+
+            if resend.api_key:
+                try:
+                    resend.Emails.send({
+                        "from": "onboarding@resend.dev",
+                        "to": consultant.email,
+                        "subject": "Reset your password",
+                        "html": f"<p>Click to reset your password (expires in 1 hour):</p><p><a href='{reset_url}'>{reset_url}</a></p>",
+                    })
+                except Exception as e:
+                    print("Password reset email failed:", e)
+
+        return render_template("consultant_forgot_password.html", message="If that email is registered, a reset link has been sent.")
+
+    return render_template("consultant_forgot_password.html")
+
+
+@app.route("/consultant/reset-password/<token>", methods=["GET", "POST"])
+def consultant_reset_password(token):
+    consultant = Consultant.query.filter_by(reset_token=token).first()
+
+    if not consultant or not consultant.verify_reset_token(token):
+        return render_template("consultant_reset_password.html", error="This reset link is invalid or has expired.", invalid=True)
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+        if not password:
+            return render_template("consultant_reset_password.html", error="Please enter a new password.", token=token)
+
+        consultant.set_password(password)
+        consultant.reset_token = None
+        consultant.reset_token_expiry = None
+        db.session.commit()
+        return redirect("/consultant/login")
+
+    return render_template("consultant_reset_password.html", token=token)
 
 
 # ─── Consultant auth + dashboard ────────────────────────────────────────────
+
+DUE_DATE_FORMATS = ("%d %B %Y", "%d %b %Y", "%Y-%m-%d", "%d/%m/%Y")
+
+
+def parse_due_date(due_date_str):
+    if not due_date_str:
+        return None
+    for fmt in DUE_DATE_FORMATS:
+        try:
+            return datetime.strptime(due_date_str.strip(), fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def get_consultant_overview(consultant):
+    students = Student.query.filter_by(consultant_id=consultant.id).order_by(Student.name.asc()).all()
+
+    student_cards = []
+    profiles_completed = 0
+    checklists_complete = 0
+    due_this_week = 0
+    week_from_now = datetime.utcnow() + timedelta(days=7)
+
+    for student in students:
+        has_profile = SavedAnswers.query.filter_by(student_id=student.id).first() is not None
+        checklist_items = ChecklistItem.query.filter_by(student_id=student.id).all()
+        checklist_total = len(checklist_items)
+        checklist_done = sum(1 for item in checklist_items if item.done)
+
+        if has_profile:
+            profiles_completed += 1
+        if checklist_total > 0 and checklist_done == checklist_total:
+            checklists_complete += 1
+
+        for item in checklist_items:
+            if item.done:
+                continue
+            due = parse_due_date(item.due_date)
+            if due and datetime.utcnow() <= due <= week_from_now:
+                due_this_week += 1
+
+        student_cards.append({
+            "student": student,
+            "has_profile": has_profile,
+            "checklist_total": checklist_total,
+            "checklist_done": checklist_done,
+        })
+
+    stats = {
+        "total_students": len(students),
+        "profiles_completed": profiles_completed,
+        "checklists_complete": checklists_complete,
+        "due_this_week": due_this_week,
+    }
+
+    return student_cards, stats
+
 
 @app.route("/consultant/register", methods=["GET", "POST"])
 def consultant_register():
@@ -704,8 +869,9 @@ def consultant_logout():
 def consultant_dashboard():
     if not isinstance(current_user, Consultant):
         return redirect("/")
-    students = Student.query.filter_by(consultant_id=current_user.id).all()
-    return render_template("consultant_dashboard.html", students=students)
+
+    student_cards, stats = get_consultant_overview(current_user)
+    return render_template("consultant_dashboard.html", student_cards=student_cards, stats=stats, active_student_id=None)
 
 
 @app.route("/consultant/student/<int:student_id>", methods=["GET", "POST"])
@@ -733,12 +899,19 @@ def consultant_student_detail(student_id):
         .first()
     )
     checklist = ChecklistItem.query.filter_by(student_id=student.id).order_by(ChecklistItem.created_at.asc()).all()
+    documents = Document.query.filter_by(student_id=student.id).order_by(Document.uploaded_at.desc()).all()
+
+    student_cards, stats = get_consultant_overview(current_user)
 
     return render_template(
         "consultant_student_detail.html",
         student=student,
         profile=latest_profile,
         checklist=checklist,
+        documents=documents,
+        student_cards=student_cards,
+        stats=stats,
+        active_student_id=student.id,
     )
 
 
@@ -787,14 +960,93 @@ def my_checklist():
     return render_template("my_checklist.html", items=items)
 
 
-admin = Admin(app, name="Study Abroad Dashboard Admin", theme=Bootstrap4Theme(swatch="darkly"))
+# ─── Student's own documents ─────────────────────────────────────────────────
+
+@app.route("/my-documents", methods=["GET", "POST"])
+@login_required
+def my_documents():
+    if not isinstance(current_user, Student):
+        return redirect("/")
+
+    error = None
+    if request.method == "POST":
+        file = request.files.get("document")
+        if not file or not file.filename:
+            error = "Choose a file first."
+        elif not allowed_document(file.filename):
+            error = "Unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG."
+        else:
+            ext = file.filename.rsplit(".", 1)[1].lower()
+            stored_name = f"{secrets.token_hex(16)}.{ext}"
+            file.save(os.path.join(student_upload_dir(current_user.id), stored_name))
+            db.session.add(Document(
+                student_id=current_user.id,
+                filename=stored_name,
+                original_filename=secure_filename(file.filename),
+            ))
+            db.session.commit()
+            return redirect("/my-documents")
+
+    documents = (
+        Document.query.filter_by(student_id=current_user.id)
+        .order_by(Document.uploaded_at.desc())
+        .all()
+    )
+    return render_template("my_documents.html", documents=documents, error=error)
+
+
+@app.route("/my-documents/<int:doc_id>/delete", methods=["POST"])
+@login_required
+def delete_document(doc_id):
+    if not isinstance(current_user, Student):
+        return redirect("/")
+    doc = Document.query.get_or_404(doc_id)
+    if doc.student_id != current_user.id:
+        return "Not authorized", 403
+
+    path = os.path.join(student_upload_dir(doc.student_id), doc.filename)
+    if os.path.exists(path):
+        os.remove(path)
+    db.session.delete(doc)
+    db.session.commit()
+    return redirect("/my-documents")
+
+
+@app.route("/documents/<int:doc_id>/download")
+@login_required
+def download_document(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if isinstance(current_user, Student):
+        if doc.student_id != current_user.id:
+            return "Not authorized", 403
+    elif isinstance(current_user, Consultant):
+        if doc.student.consultant_id != current_user.id:
+            return "Not authorized", 403
+    else:
+        return redirect("/")
+
+    return send_from_directory(
+        student_upload_dir(doc.student_id),
+        doc.filename,
+        as_attachment=True,
+        download_name=doc.original_filename,
+    )
+
+
+admin = Admin(
+    app,
+    name="Study Abroad Dashboard Admin",
+    theme=Bootstrap4Theme(swatch="darkly"),
+    index_view=SecureAdminIndexView(),
+)
 admin.add_view(UniversityAdmin(University, db.session))
 admin.add_view(ProgramAdmin(Program, db.session))
-admin.add_view(ModelView(ConsultationLead, db.session))
+admin.add_view(SecureModelView(ConsultationLead, db.session))
 admin.add_view(StudentAdmin(Student, db.session))
-admin.add_view(ModelView(Consultant, db.session))
-admin.add_view(ModelView(SavedAnswers, db.session))
-admin.add_view(ModelView(ChecklistItem, db.session))
+admin.add_view(SecureModelView(Consultant, db.session))
+admin.add_view(SecureModelView(SavedAnswers, db.session))
+admin.add_view(SecureModelView(ChecklistItem, db.session))
+admin.add_view(SecureModelView(Document, db.session))
 
 with app.app_context():
     db.create_all()

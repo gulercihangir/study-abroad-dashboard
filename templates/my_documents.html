@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Documents — Study Abroad Matcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
+    Logged in as {{ current_user.name }} — <a href="/my-checklist" style="color: var(--secondary);">My Checklist</a> — <a href="/logout" style="color: var(--secondary);">Log out</a>
+  </div>
+
+  <a href="/" style="color: var(--secondary); font-size: 13px;">&larr; Back to dashboard</a>
+
+  <h1>My Documents</h1>
+  <p>Upload transcripts, diplomas, passport copies, or other application documents. Your consultant can view and download these.</p>
+
+  <div class="letter-box">
+    <h3>Upload a Document</h3>
+    {% if error %}
+      <p style="color: var(--danger, #EF4444);">{{ error }}</p>
+    {% endif %}
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="document" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required />
+      <br>
+      <button type="submit">Upload</button>
+    </form>
+    <p style="font-size: 12px; margin-top: 8px;">Allowed types: PDF, DOC, DOCX, JPG, PNG — max 10 MB.</p>
+  </div>
+
+  {% if documents|length == 0 %}
+    <div class="letter-box">
+      <p>No documents uploaded yet.</p>
+    </div>
+  {% else %}
+    {% for doc in documents %}
+      <div class="result-card" style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div>
+          <div>{{ doc.original_filename }}</div>
+          <p style="font-size: 12px; margin: 4px 0 0;">Uploaded {{ doc.uploaded_at.strftime("%d %b %Y") }}</p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-shrink: 0;">
+          <a class="secondary-btn" style="text-decoration: none; padding: 8px 14px; border-radius: 10px; font-size: 13px;" href="/documents/{{ doc.id }}/download">Download</a>
+          <form method="POST" action="/my-documents/{{ doc.id }}/delete" onsubmit="return confirm('Delete this document?');">
+            <button type="submit" class="secondary-btn" style="font-size: 13px; padding: 8px 14px;">Delete</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+</body>
+</html>
