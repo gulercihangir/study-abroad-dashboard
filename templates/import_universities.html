@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bulk Import Universities — Consultant Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dashboard-page">
+  {% import '_macros.html' as macros %}
+
+  <header class="app-header">
+    <a class="brand-lockup" href="/consultant/dashboard">
+      {{ macros.brand_mark(28, 'bmImport') }}
+      <span class="brand-wordmark">PATİKA</span>
+    </a>
+    <div class="account-line">
+      Logged in as {{ current_user.name }} — <a href="/consultant/dashboard">Dashboard</a> — <a href="/consultant/logout">Log out</a>
+    </div>
+  </header>
+
+  <h1 class="dash-title">Bulk Import Universities</h1>
+  <p>Add, update, or delete many universities and their program requirements at once by uploading a CSV file — no need to enter them one by one in the admin panel.</p>
+
+  <div class="letter-box">
+    <h3>1. Get the template</h3>
+    <p>Download a starter CSV with the correct column headers and two example rows (one add, one delete). Open it in Excel, Google Sheets, or Numbers — fill in a row per program, then export/save as CSV again before uploading.</p>
+    <a class="secondary-btn" style="display: inline-block; text-decoration: none; padding: 10px 18px;" href="/consultant/universities-template.csv">⬇ Download CSV Template</a>
+  </div>
+
+  <div class="letter-box">
+    <h3>2. Understand the columns</h3>
+    <ul style="font-size: 13px; line-height: 1.9;">
+      <li><strong>university_name</strong> — required. Rows with the same name update the same university.</li>
+      <li><strong>major</strong> — one row per program/major offered. A university needs at least one program to show up in student matches. Leave blank if you only want to set up the university without a program yet.</li>
+      <li><strong>action</strong> — leave blank to add/update. Set to <code>delete</code> to remove: a row with <code>major</code> filled in deletes just that program; a row with <code>major</code> blank deletes the whole university (and all its programs).</li>
+      <li><strong>teaching_style, career_focus, social_scene</strong> — write a real sentence containing descriptive words (e.g. "hands-on labs, project-based learning"), not a single tag. The matching algorithm searches this text for keywords to score fit against student answers.</li>
+      <li><strong>campus_type</strong> — one of: <code>large_urban</code>, <code>medium</code>, <code>small_liberal</code>, <code>online</code>.</li>
+      <li><strong>numerus_fixus</strong> — <code>yes</code> or <code>no</code>.</li>
+      <li>Any column left blank on an <em>update</em> to an existing university/program keeps the current value — it won't be wiped out.</li>
+    </ul>
+  </div>
+
+  <div class="letter-box">
+    <h3>3. Upload your file</h3>
+    {% if error %}
+      <p style="color: #F59E0B;">{{ error }}</p>
+    {% endif %}
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" name="csv_file" accept=".csv" required />
+      <br>
+      <button type="submit">Import</button>
+    </form>
+  </div>
+
+  {% if summary %}
+    <div class="letter-box" style="border-color: var(--secondary);">
+      <h3 style="color: var(--secondary);">Import complete</h3>
+      <p>{{ summary }}</p>
+    </div>
+  {% endif %}
+
+  {% if errors %}
+    <div class="letter-box">
+      <h3>Rows with issues ({{ errors|length }})</h3>
+      <ul style="font-size: 13px; color: var(--warning, #F59E0B); line-height: 1.8;">
+        {% for err in errors %}
+          <li>{{ err }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</body>
+</html>

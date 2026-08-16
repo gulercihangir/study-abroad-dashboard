@@ -1,11 +1,13 @@
 import os
+import csv
+import io
 import secrets
 from datetime import datetime, timedelta
 import requests
 import resend
 from google import genai
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, redirect, send_from_directory
+from flask import Flask, render_template, request, jsonify, redirect, send_from_directory, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
@@ -1031,6 +1033,182 @@ def download_document(doc_id):
         as_attachment=True,
         download_name=doc.original_filename,
     )
+
+
+# ─── Bulk university import/export (consultant only) ───────────────────────
+
+UNIVERSITY_CSV_COLUMNS = [
+    "action", "university_name", "city", "region", "cost_of_living_monthly",
+    "rent_estimate_monthly", "transport_score", "website_url", "teaching_style",
+    "career_focus", "campus_type", "social_scene", "major", "application_deadline",
+    "numerus_fixus", "prerequisites", "required_documents",
+]
+
+
+@app.route("/consultant/universities-template.csv")
+@login_required
+def universities_csv_template():
+    if not isinstance(current_user, Consultant):
+        return redirect("/")
+
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=UNIVERSITY_CSV_COLUMNS)
+    writer.writeheader()
+    writer.writerow({
+        "action": "", "university_name": "Erasmus Universiteit Rotterdam", "city": "Rotterdam",
+        "region": "Zuid-Holland", "cost_of_living_monthly": "2000", "rent_estimate_monthly": "1250",
+        "transport_score": "9", "website_url": "https://www.eur.nl/en",
+        "teaching_style": "Problem-based learning, small group work, collaborative seminars",
+        "career_focus": "Strong industry ties in finance and consulting, active career services, internship placements",
+        "campus_type": "large_urban",
+        "social_scene": "Lively student associations and a vibrant nightlife scene close to campus",
+        "major": "Business Administration", "application_deadline": "1 May 2026",
+        "numerus_fixus": "yes", "prerequisites": "Strong secondary school math grades; English proficiency (IELTS 6.5+)",
+        "required_documents": "Diploma, transcript, motivation letter, CV, English test score",
+    })
+    writer.writerow({
+        "action": "delete", "university_name": "Old University To Remove", "city": "", "region": "",
+        "cost_of_living_monthly": "", "rent_estimate_monthly": "", "transport_score": "", "website_url": "",
+        "teaching_style": "", "career_focus": "", "campus_type": "", "social_scene": "",
+        "major": "", "application_deadline": "", "numerus_fixus": "", "prerequisites": "", "required_documents": "",
+    })
+
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=universities_template.csv"},
+    )
+
+
+def _parse_float(value):
+    value = (value or "").strip()
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _parse_int(value):
+    value = (value or "").strip()
+    if not value:
+        return None
+    try:
+        return int(float(value))
+    except ValueError:
+        return None
+
+
+@app.route("/consultant/import-universities", methods=["GET", "POST"])
+@login_required
+def import_universities():
+    if not isinstance(current_user, Consultant):
+        return redirect("/")
+
+    if request.method != "POST":
+        return render_template("import_universities.html")
+
+    file = request.files.get("csv_file")
+    if not file or not file.filename:
+        return render_template("import_universities.html", error="Choose a CSV file first.")
+    if not file.filename.lower().endswith(".csv"):
+        return render_template("import_universities.html", error="File must be a .csv (in Excel/Sheets: File → Download/Export → CSV).")
+
+    try:
+        raw = file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return render_template("import_universities.html", error="Could not read the file — save it as UTF-8 CSV and try again.")
+
+    reader = csv.DictReader(io.StringIO(raw))
+    if "university_name" not in (reader.fieldnames or []):
+        return render_template(
+            "import_universities.html",
+            error="Missing required column: university_name. Download the template to see the expected format.",
+        )
+
+    universities_created = 0
+    universities_updated = 0
+    programs_created = 0
+    programs_updated = 0
+    deleted_count = 0
+    errors = []
+
+    for i, row in enumerate(reader, start=2):  # row 1 is the header
+        name = (row.get("university_name") or "").strip()
+        if not name:
+            errors.append(f"Row {i}: missing university_name, skipped.")
+            continue
+
+        action = (row.get("action") or "").strip().lower()
+        major = (row.get("major") or "").strip()
+
+        if action == "delete":
+            university = University.query.filter_by(name=name).first()
+            if not university:
+                errors.append(f"Row {i}: '{name}' not found, nothing to delete.")
+                continue
+            if major:
+                program = Program.query.filter_by(university_id=university.id, major=major).first()
+                if program:
+                    db.session.delete(program)
+                    deleted_count += 1
+                else:
+                    errors.append(f"Row {i}: program '{major}' not found at '{name}'.")
+            else:
+                db.session.delete(university)  # cascades to its programs
+                deleted_count += 1
+            continue
+
+        university = University.query.filter_by(name=name).first()
+        uni_fields = {
+            "city": (row.get("city") or "").strip() or None,
+            "region": (row.get("region") or "").strip() or None,
+            "cost_of_living_monthly": _parse_float(row.get("cost_of_living_monthly")),
+            "rent_estimate_monthly": _parse_float(row.get("rent_estimate_monthly")),
+            "transport_score": _parse_int(row.get("transport_score")),
+            "website_url": (row.get("website_url") or "").strip() or None,
+            "teaching_style": (row.get("teaching_style") or "").strip() or None,
+            "career_focus": (row.get("career_focus") or "").strip() or None,
+            "campus_type": (row.get("campus_type") or "").strip() or None,
+            "social_scene": (row.get("social_scene") or "").strip() or None,
+        }
+
+        if not university:
+            university = University(name=name, **uni_fields)
+            db.session.add(university)
+            db.session.flush()
+            universities_created += 1
+        else:
+            for field, value in uni_fields.items():
+                if value is not None:
+                    setattr(university, field, value)
+            universities_updated += 1
+
+        if major:
+            program = Program.query.filter_by(university_id=university.id, major=major).first()
+            prog_fields = {
+                "application_deadline": (row.get("application_deadline") or "").strip() or None,
+                "numerus_fixus": (row.get("numerus_fixus") or "").strip().lower() or None,
+                "prerequisites": (row.get("prerequisites") or "").strip() or None,
+                "required_documents": (row.get("required_documents") or "").strip() or None,
+            }
+            if not program:
+                db.session.add(Program(university_id=university.id, major=major, **prog_fields))
+                programs_created += 1
+            else:
+                for field, value in prog_fields.items():
+                    if value is not None:
+                        setattr(program, field, value)
+                programs_updated += 1
+
+    db.session.commit()
+
+    summary = (
+        f"{universities_created} universities added, {universities_updated} updated — "
+        f"{programs_created} programs added, {programs_updated} updated — {deleted_count} deleted."
+    )
+    return render_template("import_universities.html", summary=summary, errors=errors)
 
 
 admin = Admin(
