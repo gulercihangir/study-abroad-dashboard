@@ -2,6 +2,7 @@ import os
 import csv
 import io
 import secrets
+from functools import wraps
 from datetime import datetime, timedelta
 import requests
 import resend
@@ -9,6 +10,7 @@ from google import genai
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, jsonify, redirect, send_from_directory, Response
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import joinedload
 from flask_admin import Admin, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.theme import Bootstrap4Theme
@@ -16,11 +18,13 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-load_dotenv()
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 app = Flask(__name__)
 
-database_url = os.environ.get("DATABASE_URL", "sqlite:///universities.db")
+default_sqlite_path = os.path.join(BASE_DIR, "instance", "universities.db")
+database_url = os.environ.get("DATABASE_URL", f"sqlite:///{default_sqlite_path}")
 if database_url.startswith("postgres://"):
     database_url = database_url.replace("postgres://", "postgresql://", 1)
 
@@ -289,6 +293,26 @@ def load_user(user_id):
     return None
 
 
+def consultant_required(view_func):
+    @wraps(view_func)
+    @login_required
+    def wrapper(*args, **kwargs):
+        if not isinstance(current_user, Consultant):
+            return redirect("/")
+        return view_func(*args, **kwargs)
+    return wrapper
+
+
+def student_required(view_func):
+    @wraps(view_func)
+    @login_required
+    def wrapper(*args, **kwargs):
+        if not isinstance(current_user, Student):
+            return redirect("/")
+        return view_func(*args, **kwargs)
+    return wrapper
+
+
 class ConsultantAccessMixin:
     def is_accessible(self):
         return isinstance(current_user, Consultant) and current_user.is_authenticated
@@ -503,7 +527,7 @@ def home():
 @app.route("/api/find-universities", methods=["POST"])
 def find_universities():
     answers = request.json
-    programs = Program.query.all()
+    programs = Program.query.options(joinedload(Program.university)).all()
 
     results = [score_program(p, p.university, answers) for p in programs]
     results.sort(key=lambda r: r["score"], reverse=True)
@@ -777,30 +801,52 @@ def parse_due_date(due_date_str):
 
 def get_consultant_overview(consultant):
     students = Student.query.filter_by(consultant_id=consultant.id).order_by(Student.name.asc()).all()
+    student_ids = [s.id for s in students]
+
+    if not student_ids:
+        return [], {"total_students": 0, "profiles_completed": 0, "checklists_complete": 0, "due_this_week": 0}
+
+    profile_student_ids = {
+        row[0] for row in
+        db.session.query(SavedAnswers.student_id)
+        .filter(SavedAnswers.student_id.in_(student_ids))
+        .distinct()
+    }
+
+    checklist_counts = {
+        student_id: (total, done or 0)
+        for student_id, total, done in (
+            db.session.query(
+                ChecklistItem.student_id,
+                db.func.count(ChecklistItem.id),
+                db.func.sum(db.case((ChecklistItem.done.is_(True), 1), else_=0)),
+            )
+            .filter(ChecklistItem.student_id.in_(student_ids))
+            .group_by(ChecklistItem.student_id)
+        )
+    }
+
+    undone_items = ChecklistItem.query.filter(
+        ChecklistItem.student_id.in_(student_ids), ChecklistItem.done.is_(False)
+    ).all()
+    week_from_now = datetime.utcnow() + timedelta(days=7)
+    due_this_week = sum(
+        1 for item in undone_items
+        if (due := parse_due_date(item.due_date)) and datetime.utcnow() <= due <= week_from_now
+    )
 
     student_cards = []
     profiles_completed = 0
     checklists_complete = 0
-    due_this_week = 0
-    week_from_now = datetime.utcnow() + timedelta(days=7)
 
     for student in students:
-        has_profile = SavedAnswers.query.filter_by(student_id=student.id).first() is not None
-        checklist_items = ChecklistItem.query.filter_by(student_id=student.id).all()
-        checklist_total = len(checklist_items)
-        checklist_done = sum(1 for item in checklist_items if item.done)
+        has_profile = student.id in profile_student_ids
+        checklist_total, checklist_done = checklist_counts.get(student.id, (0, 0))
 
         if has_profile:
             profiles_completed += 1
         if checklist_total > 0 and checklist_done == checklist_total:
             checklists_complete += 1
-
-        for item in checklist_items:
-            if item.done:
-                continue
-            due = parse_due_date(item.due_date)
-            if due and datetime.utcnow() <= due <= week_from_now:
-                due_this_week += 1
 
         student_cards.append({
             "student": student,
@@ -867,21 +913,15 @@ def consultant_logout():
 
 
 @app.route("/consultant/dashboard")
-@login_required
+@consultant_required
 def consultant_dashboard():
-    if not isinstance(current_user, Consultant):
-        return redirect("/")
-
     student_cards, stats = get_consultant_overview(current_user)
     return render_template("consultant_dashboard.html", student_cards=student_cards, stats=stats, active_student_id=None)
 
 
 @app.route("/consultant/student/<int:student_id>", methods=["GET", "POST"])
-@login_required
+@consultant_required
 def consultant_student_detail(student_id):
-    if not isinstance(current_user, Consultant):
-        return redirect("/")
-
     student = Student.query.get_or_404(student_id)
     if student.consultant_id != current_user.id:
         return "Not authorized to view this student.", 403
@@ -950,10 +990,8 @@ def toggle_checklist_visibility(item_id):
 # ─── Student's own checklist view ───────────────────────────────────────────
 
 @app.route("/my-checklist")
-@login_required
+@student_required
 def my_checklist():
-    if not isinstance(current_user, Student):
-        return redirect("/")
     items = (
         ChecklistItem.query.filter_by(student_id=current_user.id, visible_to_student=True)
         .order_by(ChecklistItem.created_at.asc())
@@ -965,11 +1003,8 @@ def my_checklist():
 # ─── Student's own documents ─────────────────────────────────────────────────
 
 @app.route("/my-documents", methods=["GET", "POST"])
-@login_required
+@student_required
 def my_documents():
-    if not isinstance(current_user, Student):
-        return redirect("/")
-
     error = None
     if request.method == "POST":
         file = request.files.get("document")
@@ -998,10 +1033,8 @@ def my_documents():
 
 
 @app.route("/my-documents/<int:doc_id>/delete", methods=["POST"])
-@login_required
+@student_required
 def delete_document(doc_id):
-    if not isinstance(current_user, Student):
-        return redirect("/")
     doc = Document.query.get_or_404(doc_id)
     if doc.student_id != current_user.id:
         return "Not authorized", 403
@@ -1046,11 +1079,8 @@ UNIVERSITY_CSV_COLUMNS = [
 
 
 @app.route("/consultant/universities-template.csv")
-@login_required
+@consultant_required
 def universities_csv_template():
-    if not isinstance(current_user, Consultant):
-        return redirect("/")
-
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=UNIVERSITY_CSV_COLUMNS)
     writer.writeheader()
@@ -1101,11 +1131,8 @@ def _parse_int(value):
 
 
 @app.route("/consultant/import-universities", methods=["GET", "POST"])
-@login_required
+@consultant_required
 def import_universities():
-    if not isinstance(current_user, Consultant):
-        return redirect("/")
-
     if request.method != "POST":
         return render_template("import_universities.html")
 
