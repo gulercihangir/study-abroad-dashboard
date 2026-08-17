@@ -8,7 +8,7 @@ import requests
 import resend
 from google import genai
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, redirect, send_from_directory, Response
+from flask import Flask, render_template, request, jsonify, redirect, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
 from flask_admin import Admin, AdminIndexView
@@ -39,11 +39,6 @@ ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "doc", "docx", "jpg", "jpeg", "png"}
 def allowed_document(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_DOCUMENT_EXTENSIONS
 
-
-def student_upload_dir(student_id):
-    path = os.path.join(app.instance_path, "uploads", str(student_id))
-    os.makedirs(path, exist_ok=True)
-    return path
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -275,8 +270,9 @@ class ChecklistItem(db.Model):
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False)
-    filename = db.Column(db.String(300), nullable=False)
     original_filename = db.Column(db.String(300), nullable=False)
+    content_type = db.Column(db.String(100))
+    data = db.Column(db.LargeBinary, nullable=False)
     uploaded_at = db.Column(db.DateTime, server_default=db.func.now())
 
     student = db.relationship("Student", backref="documents")
@@ -384,6 +380,12 @@ class ProgramAdmin(ConsultantAccessMixin, ModelView):
 class StudentAdmin(AdminOnlyAccessMixin, ModelView):
     column_list = ["name", "email", "consultant", "created_at"]
     form_columns = ["name", "email", "consultant"]
+
+
+class DocumentAdmin(AdminOnlyAccessMixin, ModelView):
+    column_list = ["student", "original_filename", "content_type", "uploaded_at"]
+    form_excluded_columns = ["data"]
+    can_create = False
 
 
 TEACHING_STYLE_KEYWORDS = {
@@ -1075,13 +1077,11 @@ def my_documents():
         elif not allowed_document(file.filename):
             error = "Unsupported file type. Allowed: PDF, DOC, DOCX, JPG, PNG."
         else:
-            ext = file.filename.rsplit(".", 1)[1].lower()
-            stored_name = f"{secrets.token_hex(16)}.{ext}"
-            file.save(os.path.join(student_upload_dir(current_user.id), stored_name))
             db.session.add(Document(
                 student_id=current_user.id,
-                filename=stored_name,
                 original_filename=secure_filename(file.filename),
+                content_type=file.mimetype,
+                data=file.read(),
             ))
             db.session.commit()
             return redirect("/my-documents")
@@ -1101,9 +1101,6 @@ def delete_document(doc_id):
     if doc.student_id != current_user.id:
         return "Not authorized", 403
 
-    path = os.path.join(student_upload_dir(doc.student_id), doc.filename)
-    if os.path.exists(path):
-        os.remove(path)
     db.session.delete(doc)
     db.session.commit()
     return redirect("/my-documents")
@@ -1122,19 +1119,17 @@ def download_document(doc_id):
     else:
         return redirect("/")
 
-    file_path = os.path.join(student_upload_dir(doc.student_id), doc.filename)
-    if not os.path.exists(file_path):
+    if not doc.data:
         return (
-            "This file is no longer available on the server (it may have been lost "
-            "during a redeploy). Ask the student to re-upload it.",
+            "This file has no stored content (it may predate persistent document "
+            "storage). Ask the student to re-upload it.",
             410,
         )
 
-    return send_from_directory(
-        student_upload_dir(doc.student_id),
-        doc.filename,
-        as_attachment=True,
-        download_name=doc.original_filename,
+    return Response(
+        doc.data,
+        mimetype=doc.content_type or "application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{doc.original_filename}"'},
     )
 
 
@@ -1321,7 +1316,7 @@ admin.add_view(StudentAdmin(Student, db.session))
 admin.add_view(SecureModelView(Consultant, db.session))
 admin.add_view(SecureModelView(SavedAnswers, db.session))
 admin.add_view(SecureModelView(ChecklistItem, db.session))
-admin.add_view(SecureModelView(Document, db.session))
+admin.add_view(DocumentAdmin(Document, db.session))
 
 with app.app_context():
     db.create_all()
