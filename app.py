@@ -156,6 +156,7 @@ class Consultant(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     reset_token = db.Column(db.String(100))
     reset_token_expiry = db.Column(db.DateTime)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     students = db.relationship("Student", backref="consultant", lazy=True, foreign_keys="Student.consultant_id")
 
@@ -314,6 +315,9 @@ def student_required(view_func):
 
 
 class ConsultantAccessMixin:
+    """Any authenticated consultant — used for views that are safe for every
+    consultant to edit (the shared university/program catalog)."""
+
     def is_accessible(self):
         return isinstance(current_user, Consultant) and current_user.is_authenticated
 
@@ -321,11 +325,31 @@ class ConsultantAccessMixin:
         return redirect("/consultant/login")
 
 
+class AdminOnlyAccessMixin:
+    """Only consultants flagged is_admin — used for views that expose data
+    across all consultants/students (student roster, other consultants'
+    accounts, documents, checklists). A regular consultant already sees
+    their own students' data through the CRM; these admin views must not
+    leak everyone else's."""
+
+    def is_accessible(self):
+        return (
+            isinstance(current_user, Consultant)
+            and current_user.is_authenticated
+            and current_user.is_admin
+        )
+
+    def inaccessible_callback(self, name, **kwargs):
+        if isinstance(current_user, Consultant) and current_user.is_authenticated:
+            return redirect("/consultant/dashboard")
+        return redirect("/consultant/login")
+
+
 class SecureAdminIndexView(ConsultantAccessMixin, AdminIndexView):
     pass
 
 
-class SecureModelView(ConsultantAccessMixin, ModelView):
+class SecureModelView(AdminOnlyAccessMixin, ModelView):
     pass
 
 
@@ -357,7 +381,7 @@ class ProgramAdmin(ConsultantAccessMixin, ModelView):
     column_list = ["major", "university", "application_deadline", "numerus_fixus"]
 
 
-class StudentAdmin(ConsultantAccessMixin, ModelView):
+class StudentAdmin(AdminOnlyAccessMixin, ModelView):
     column_list = ["name", "email", "consultant", "created_at"]
     form_columns = ["name", "email", "consultant"]
 
@@ -1097,6 +1121,14 @@ def download_document(doc_id):
             return "Not authorized", 403
     else:
         return redirect("/")
+
+    file_path = os.path.join(student_upload_dir(doc.student_id), doc.filename)
+    if not os.path.exists(file_path):
+        return (
+            "This file is no longer available on the server (it may have been lost "
+            "during a redeploy). Ask the student to re-upload it.",
+            410,
+        )
 
     return send_from_directory(
         student_upload_dir(doc.student_id),
