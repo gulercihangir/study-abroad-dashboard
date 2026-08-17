@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hakkımızda — Patika</title>
+  <meta name="description" content="Patika, Türkiye'den Hollanda'ya üniversite eğitimi için gerçek veriyle, ücretsiz eşleştirme sunan bir platformdur.">
+  <link rel="canonical" href="https://study-abroad-dashboard.onrender.com/about">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="content-page">
+  {% import '_macros.html' as macros %}
+
+  <nav class="content-nav">
+    <a class="brand-lockup" href="/">
+      {{ macros.brand_mark(28, 'bmAbout') }}
+      <span class="brand-wordmark">PATİKA</span>
+    </a>
+    <a class="secondary-btn" href="/find-university" style="text-decoration: none; padding: 9px 18px; font-size: 13px;">Ücretsiz Başla</a>
+  </nav>
+
+  <div class="content-wrap">
+    <div class="content-eyebrow">Hakkımızda</div>
+    <h1>Satış konuşması değil, karşılaştırılabilir veri.</h1>
+    <p class="content-lede">
+      Patika, Türkiye'den Hollanda'da üniversite okumayı düşünen öğrenciler için kuruldu — gerçek maliyet ve
+      kabul verisiyle ücretsiz bir eşleştirme aracı, ve bu süreci yöneten danışmanlar için dağınıklığı ortadan
+      kaldıran bir panel.
+    </p>
+
+    <div class="content-body">
+      <h2>Neden Patika?</h2>
+      <p>
+        Yurt dışında üniversite araştırması genellikle onlarca açık sekme, tutarsız bilgiler ve hangi
+        danışmanlık teklifine güveneceğini bilememekle geçiyor. Patika bunu tek bir soruya indirger:
+        <strong>bölümün, bütçen ve tercihlerin için gerçekte hangi üniversiteler uygun?</strong>
+      </p>
+      <p>
+        9 kısa soruluk ücretsiz sihirbazımız, seni gerçek maliyet verisi ve kabul koşullarıyla eşleştirir —
+        kayıt zorunluluğu olmadan, satış baskısı olmadan.
+      </p>
+
+      <h2>Danışmanlar İçin</h2>
+      <p>
+        Bağımsız eğitim danışmanları ve küçük ajanslar için ayrı bir panel sunuyoruz: öğrenci takibi,
+        checklist yönetimi ve belge paylaşımı tek ekranda. Her öğrenci yalnızca kendisine atanmış danışmana
+        bağlanır — Patika açık bir pazar yeri değildir.
+      </p>
+
+      <h2>Nerede Olduğumuz</h2>
+      <p>
+        Şu anda Hollanda'daki üniversiteler ve programlarla başlıyoruz; katalog zamanla yeni ülkelere
+        genişleyecek. Ürünümüz aktif geliştirme aşamasında — geri bildiriminiz bizim için değerli.
+      </p>
+    </div>
+  </div>
+
+  {{ macros.site_footer() }}
+</body>
+</html>

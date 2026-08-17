@@ -541,6 +541,184 @@ def score_program(program, university, answers):
     return {"program": program, "university": university, "score": round(total_score, 1), "reasons": reasons}
 
 
+@app.context_processor
+def inject_site_globals():
+    return {
+        "current_year": datetime.utcnow().year,
+        "legal_updated": "17 Ağustos 2026",
+    }
+
+
+BLOG_POSTS = [
+    {
+        "slug": "hollandada-universite-basvurusu-rehberi",
+        "title": "Hollanda'da Üniversite Başvurusu: Adım Adım Rehber",
+        "date": "10 Ağustos 2026",
+        "excerpt": "Studielink kaydından vize sürecine, başvuru zaman çizelgesinin nasıl işlediğine dair pratik bir özet.",
+        "body": """
+            <p>Hollanda'daki üniversitelere başvuru süreci, birçok ülkeye göre daha merkezi ve şeffaf işler
+            — ama adımları bilmeden ilerlemek kolayca kafa karıştırıcı hale gelebilir. İşte genel hatlarıyla süreç:</p>
+
+            <h3>1. Studielink Kaydı</h3>
+            <p>Hollanda'daki hemen hemen tüm yükseköğretim başvuruları <strong>Studielink</strong> adlı ulusal
+            platform üzerinden yapılır. Başvurmak istediğin üniversite ve programı burada seçip başvurunu
+            başlatırsın; üniversite daha sonra kendi sistemi üzerinden ek belgeler ister.</p>
+
+            <h3>2. Zaman Çizelgesi</h3>
+            <p>Genel (kontenjansız) programlar için başvuru son tarihi genellikle <strong>1 Mayıs</strong>'tır.
+            Kontenjanlı (numerus fixus) programlarda bu tarih daha erkendir — genellikle <strong>15 Ocak</strong>.
+            Erken başvurmak, özellikle barınma ve vize süreci için zaman kazandırır.</p>
+
+            <h3>3. Genel Olarak İstenen Belgeler</h3>
+            <ul>
+                <li>Lise diploması ve not dökümü (transkript)</li>
+                <li>İngilizce yeterlilik belgesi (IELTS veya TOEFL, program İngilizce öğretim yapıyorsa)</li>
+                <li>Motivasyon mektubu</li>
+                <li>Bazı programlarda CV veya portföy</li>
+            </ul>
+            <p>Her üniversite ve programın kendine özgü gereksinimleri olabilir — bu yüzden başvurmadan önce
+            ilgili programın sayfasını kontrol etmek önemlidir.</p>
+
+            <h3>4. Vize ve Oturum İzni</h3>
+            <p>Türkiye vatandaşları AB/AEA vatandaşı olmadığı için, Hollanda'da eğitim amacıyla kalmak için
+            genellikle bir oturum izni (ve bazı durumlarda öğrenci vizesi) gerekir. Bu süreç IND
+            (Immigratie- en Naturalisatiedienst) üzerinden yürütülür; çoğu zaman kabul aldığın üniversite bu
+            süreçte sana rehberlik eder.</p>
+
+            <h3>5. Sıradaki Adım</h3>
+            <p>Hangi üniversite ve programın senin bütçen, bölümün ve tercihlerine gerçekten uygun olduğunu
+            görmek için <a href="/find-university">ücretsiz eşleştirme sihirbazımızı</a> deneyebilirsin —
+            9 soru, 2 dakika.</p>
+        """,
+    },
+    {
+        "slug": "numerus-fixus-nedir",
+        "title": "Numerus Fixus Nedir? Kontenjanlı Bölümler Hakkında Bilmen Gerekenler",
+        "date": "3 Ağustos 2026",
+        "excerpt": "\"Numerus fixus\" ifadesini gördüğünde paniklemene gerek yok — ne anlama geldiğini ve süreci nasıl etkilediğini açıklıyoruz.",
+        "body": """
+            <p><strong>Numerus fixus</strong>, Latince "sabit sayı" anlamına gelir — Hollanda'da bazı
+            programların sınırlı sayıda öğrenci kabul ettiği anlamına gelir. Tıp, bazı Psikoloji programları
+            ve Fizyoterapi gibi yüksek talep gören bölümler genellikle bu kategoriye girer.</p>
+
+            <h3>Seçim Nasıl Yapılıyor?</h3>
+            <p>2017'deki bir reformdan önce, kontenjanlı programlara kabul kısmen ağırlıklı kura (lottery)
+            sistemiyle belirleniyordu. Bugün çoğu üniversite, öğrencileri doğrudan kendi belirlediği
+            kriterlere göre seçiyor — bu kriterler not ortalaması, motivasyon mektubu, bazen mülakat veya ek
+            test içerebilir. Kriterler üniversiteden üniversiteye, programdan programa değişir.</p>
+
+            <h3>Neden Daha Erken Başvurmalısın?</h3>
+            <p>Kontenjanlı programlar için başvuru son tarihi, genel programlara göre çok daha erkendir —
+            genellikle <strong>15 Ocak</strong>. Bu tarihi kaçırmak, o akademik yıl için başvuru şansını
+            tamamen kaybetmen anlamına gelebilir.</p>
+
+            <h3>Bunu Nasıl Kontrol Edersin?</h3>
+            <p>Bir programın kontenjanlı olup olmadığı ve tam olarak hangi seçim kriterlerini kullandığı,
+            üniversitenin kendi program sayfasında belirtilir. Patika'nın eşleştirme sonuçlarında da her
+            program için bu bilgiyi görebilirsin — tahmin etmene gerek kalmaz.</p>
+
+            <p><a href="/find-university">Ücretsiz sihirbazımızla</a> ilgilendiğin bölümün kontenjanlı olup
+            olmadığını ve son başvuru tarihini hemen öğrenebilirsin.</p>
+        """,
+    },
+    {
+        "slug": "hollandada-yasam-maliyeti",
+        "title": "Hollanda'da Yaşam Maliyeti: Şehirler Arası Farklar",
+        "date": "27 Temmuz 2026",
+        "excerpt": "Amsterdam ile daha küçük bir üniversite şehri arasındaki bütçe farkı düşündüğünden büyük olabilir.",
+        "body": """
+            <p>Hollanda'da öğrenci olarak yaşam maliyeti, hangi şehirde okuduğuna bağlı olarak ciddi şekilde
+            değişir. Kesin rakamlar yıldan yıla ve kişisel yaşam tarzına göre değişse de, genel eğilimler
+            oldukça tutarlıdır.</p>
+
+            <h3>Kira: En Büyük Değişken</h3>
+            <p>Amsterdam, Utrecht ve Den Haag gibi Randstad bölgesindeki büyük şehirler, kira açısından
+            genellikle Hollanda'nın en pahalı yerleridir — ayrıca öğrenci konutu kıtlığı bu şehirlerde daha
+            belirgindir. Groningen, Nijmegen, Enschede gibi daha küçük üniversite şehirleri genellikle
+            belirgin şekilde daha uygun fiyatlı barınma sunar.</p>
+
+            <h3>Diğer Aylık Giderler</h3>
+            <ul>
+                <li><strong>Market/gıda:</strong> şehirden bağımsız olarak nispeten benzer, ama büyük şehirlerde
+                dışarıda yeme-içme daha pahalı olma eğilimindedir</li>
+                <li><strong>Ulaşım:</strong> bisiklet Hollanda'da öğrenciler arasında en yaygın ulaşım şeklidir
+                ve maliyeti düşürür; toplu taşıma için öğrenci indirimleri mevcuttur ama uygunluk kriterleri
+                (uyruk, çalışma saati gibi) değişebilir</li>
+                <li><strong>Sağlık sigortası:</strong> çoğu durumda zorunludur ve bütçene eklenmesi gereken
+                sabit bir aylık gider kalemidir</li>
+            </ul>
+
+            <h3>Genel Bir Kural</h3>
+            <p>Amsterdam'da yaşamak, benzer bir programı daha küçük bir üniversite şehrinde okumaya kıyasla
+            aylık bütçeni belirgin şekilde artırabilir. Eğer bütçen sınırlıysa, aynı bölümü sunan daha küçük
+            bir şehirdeki üniversiteyi değerlendirmek gerçek bir tasarruf sağlayabilir.</p>
+
+            <p>Bu yazıdaki bilgiler genel eğilimleri özetler; <strong>güncel ve şehir bazlı gerçek rakamlar
+            için</strong> <a href="/find-university">eşleştirme sihirbazımızı</a> kullanmanı öneririz — her
+            üniversite sonucunda gerçek maliyet verisi otomatik olarak gösterilir.</p>
+        """,
+    },
+]
+
+
+@app.route("/blog")
+def blog_index():
+    return render_template("blog_index.html", posts=BLOG_POSTS)
+
+
+@app.route("/blog/<slug>")
+def blog_post(slug):
+    post = next((p for p in BLOG_POSTS if p["slug"] == slug), None)
+    if not post:
+        return render_template("blog_index.html", posts=BLOG_POSTS, not_found=True), 404
+    return render_template("blog_post.html", post=post)
+
+
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        message = (request.form.get("message") or "").strip()
+
+        if not name or not email or not message:
+            return render_template("contact.html", error="Lütfen tüm alanları doldurun.")
+
+        if resend.api_key and NOTIFICATION_EMAIL:
+            try:
+                resend.Emails.send({
+                    "from": "onboarding@resend.dev",
+                    "to": NOTIFICATION_EMAIL,
+                    "subject": f"Patika iletişim formu: {name}",
+                    "html": f"""
+                        <p><strong>İsim:</strong> {name}</p>
+                        <p><strong>E-posta:</strong> {email}</p>
+                        <p><strong>Mesaj:</strong> {message}</p>
+                    """,
+                })
+            except Exception as e:
+                print("Contact form email failed:", e)
+
+        return render_template("contact.html", sent=True)
+
+    return render_template("contact.html")
+
+
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html")
+
+
+@app.route("/terms")
+def terms():
+    return render_template("terms.html")
+
+
 @app.route("/")
 def landing():
     return render_template("landing.html")
@@ -556,6 +734,9 @@ def robots_txt():
         "User-agent: *",
         "Allow: /",
         "Allow: /find-university",
+        "Allow: /about",
+        "Allow: /blog",
+        "Allow: /contact",
         "Allow: /consultant/login",
         "Allow: /consultant/register",
         "Disallow: /consultant/dashboard",
@@ -574,6 +755,9 @@ def sitemap_xml():
     pages = [
         ("/", "1.0"),
         ("/find-university", "0.9"),
+        ("/about", "0.5"),
+        ("/blog", "0.6"),
+        ("/contact", "0.4"),
         ("/consultant/login", "0.5"),
         ("/consultant/register", "0.6"),
         ("/login", "0.4"),
@@ -583,6 +767,10 @@ def sitemap_xml():
     urls = "\n".join(
         f"  <url><loc>{base}{path}</loc><priority>{priority}</priority></url>"
         for path, priority in pages
+    )
+    urls += "\n" + "\n".join(
+        f'  <url><loc>{base}/blog/{p["slug"]}</loc><priority>0.5</priority></url>'
+        for p in BLOG_POSTS
     )
     xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}\n</urlset>'
     return Response(xml, mimetype="application/xml")

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ post.title }} — Patika Blog</title>
+  <meta name="description" content="{{ post.excerpt }}">
+  <link rel="canonical" href="https://study-abroad-dashboard.onrender.com/blog/{{ post.slug }}">
+
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="{{ post.title }}">
+  <meta property="og:description" content="{{ post.excerpt }}">
+  <meta property="og:image" content="https://study-abroad-dashboard.onrender.com/static/img/og-image.png">
+  <meta property="og:url" content="https://study-abroad-dashboard.onrender.com/blog/{{ post.slug }}">
+
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": {{ post.title|tojson }},
+    "description": {{ post.excerpt|tojson }},
+    "datePublished": {{ post.date|tojson }},
+    "author": { "@type": "Organization", "name": "Patika" }
+  }
+  </script>
+</head>
+<body class="content-page">
+  {% import '_macros.html' as macros %}
+
+  <nav class="content-nav">
+    <a class="brand-lockup" href="/">
+      {{ macros.brand_mark(28, 'bmBlogPost') }}
+      <span class="brand-wordmark">PATİKA</span>
+    </a>
+    <a class="secondary-btn" href="/find-university" style="text-decoration: none; padding: 9px 18px; font-size: 13px;">Ücretsiz Başla</a>
+  </nav>
+
+  <div class="content-wrap">
+    <a href="/blog" style="color: var(--secondary); font-size: 13px; text-decoration: none;">&larr; Bloga dön</a>
+    <div class="content-eyebrow" style="margin-top: 20px;">{{ post.date }}</div>
+    <h1>{{ post.title }}</h1>
+    <p class="content-lede">{{ post.excerpt }}</p>
+
+    <div class="content-body">
+      {{ post.body|safe }}
+    </div>
+  </div>
+
+  {{ macros.site_footer() }}
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog — Patika</title>
+  <meta name="description" content="Hollanda'da üniversite başvurusu, numerus fixus ve yaşam maliyeti hakkında pratik rehberler.">
+  <link rel="canonical" href="https://study-abroad-dashboard.onrender.com/blog">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="content-page">
+  {% import '_macros.html' as macros %}
+
+  <nav class="content-nav">
+    <a class="brand-lockup" href="/">
+      {{ macros.brand_mark(28, 'bmBlog') }}
+      <span class="brand-wordmark">PATİKA</span>
+    </a>
+    <a class="secondary-btn" href="/find-university" style="text-decoration: none; padding: 9px 18px; font-size: 13px;">Ücretsiz Başla</a>
+  </nav>
+
+  <div class="content-wrap">
+    <div class="content-eyebrow">Blog</div>
+    <h1>Rehberler ve İpuçları</h1>
+    <p class="content-lede">
+      Hollanda'da üniversite okumakla ilgili pratik, doğru bilgiler — satış konuşması yok.
+    </p>
+
+    {% if not_found %}
+      <p style="color: var(--warning);">Aradığınız yazı bulunamadı.</p>
+    {% endif %}
+
+    <div class="blog-grid">
+      {% for post in posts %}
+        <a class="blog-card" href="/blog/{{ post.slug }}">
+          <div class="blog-card-eyebrow">{{ post.date }}</div>
+          <h3>{{ post.title }}</h3>
+          <p>{{ post.excerpt }}</p>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  {{ macros.site_footer() }}
+</body>
+</html>

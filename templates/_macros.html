@@ -13,6 +13,39 @@
 </svg>
 {% endmacro %}
 
+{% macro site_footer() %}
+<footer class="site-footer">
+  <div class="site-footer-grid">
+    <div class="site-footer-brand">
+      <a class="brand-lockup" href="/">
+        {{ brand_mark(24, 'bmFooter') }}
+        <span class="brand-wordmark">PATİKA</span>
+      </a>
+      <p>Türkiye'den Hollanda'ya, gerçek veriyle üniversite eşleştirme.</p>
+    </div>
+    <div class="site-footer-col">
+      <h4>Ürün</h4>
+      <a href="/find-university">Öğrenci Portalı</a>
+      <a href="/consultant/register">Danışman Portalı</a>
+    </div>
+    <div class="site-footer-col">
+      <h4>Şirket</h4>
+      <a href="/about">Hakkımızda</a>
+      <a href="/blog">Blog</a>
+      <a href="/contact">İletişim</a>
+    </div>
+    <div class="site-footer-col">
+      <h4>Yasal</h4>
+      <a href="/privacy">Gizlilik Politikası</a>
+      <a href="/terms">Kullanım Koşulları</a>
+    </div>
+  </div>
+  <div class="site-footer-bottom">
+    &copy; {{ current_year }} Patika. Tüm hakları saklıdır.
+  </div>
+</footer>
+{% endmacro %}
+
 {% macro initials(name) -%}
 {{ name.split(' ')|map('first')|join('')|upper|truncate(2, True, '') }}
 {%- endmacro %}

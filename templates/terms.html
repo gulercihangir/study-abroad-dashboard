@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kullanım Koşulları — Patika</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://study-abroad-dashboard.onrender.com/terms">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="content-page">
+  {% import '_macros.html' as macros %}
+
+  <nav class="content-nav">
+    <a class="brand-lockup" href="/">
+      {{ macros.brand_mark(28, 'bmTerms') }}
+      <span class="brand-wordmark">PATİKA</span>
+    </a>
+    <a class="secondary-btn" href="/" style="text-decoration: none; padding: 9px 18px; font-size: 13px;">Ana Sayfa</a>
+  </nav>
+
+  <div class="content-wrap">
+    <div class="content-eyebrow">Yasal</div>
+    <h1>Kullanım Koşulları</h1>
+    <p class="legal-updated">Son güncelleme: {{ legal_updated }}</p>
+
+    <div class="legal-notice">
+      <strong>Önemli not:</strong> Bu metin bir hukuk danışmanı tarafından incelenmemiş bir taslaktır.
+      Yayınlamadan önce bir avukata danışmanızı öneririz.
+    </div>
+
+    <div class="content-body">
+      <h2>1. Hizmet Tanımı</h2>
+      <p>
+        Patika; öğrencileri Hollanda'daki üniversite ve programlarla ücretsiz olarak eşleştiren bir
+        sihirbaz, isteğe bağlı ücretli danışmanlık hizmeti ve eğitim danışmanları/ajansları için bir
+        öğrenci takip paneli (CRM) sunar.
+      </p>
+
+      <h2>2. Hesap Sorumluluğu</h2>
+      <p>
+        Hesabınla ilgili tüm işlemlerden sen sorumlusun. Şifreni kimseyle paylaşma. Hesabınla ilgili
+        şüpheli bir aktivite fark edersen bize <a href="/contact">iletişim sayfasından</a> bildir.
+      </p>
+
+      <h2>3. Kabul Garantisi Yok</h2>
+      <p>
+        Patika'nın eşleştirme sonuçları, girdiğin bilgilere dayalı bir <strong>tahmin ve karşılaştırma
+        aracıdır</strong> — hiçbir üniversiteye kabul edileceğinin garantisi değildir. Nihai kabul kararı
+        tamamen ilgili üniversiteye aittir.
+      </p>
+
+      <h2>4. Danışmanlık İlişkisi</h2>
+      <p>
+        Platform üzerinden bir danışmanla eşleştirildiğinde, danışmanlık hizmetinin içeriği ve kalitesi
+        ilgili danışman/ajansın sorumluluğundadır. Patika, öğrenci ile danışman arasındaki danışmanlık
+        sözleşmesinin tarafı değildir; yalnızca iletişim ve takip için bir araç sağlar.
+      </p>
+
+      <h2>5. Danışmanlar İçin Kullanım Koşulları</h2>
+      <p>
+        Danışman hesabı açan kullanıcılar, yalnızca kendilerine atanmış öğrencilerin verilerine erişebilir
+        ve bu verileri yalnızca danışmanlık amacıyla kullanabilir. Öğrenci verilerinin başka bir amaçla
+        kullanılması veya üçüncü taraflarla paylaşılması yasaktır.
+      </p>
+
+      <h2>6. Kabul Edilebilir Kullanım</h2>
+      <p>Platformu kullanırken şunları yapmamayı kabul edersin:</p>
+      <ul>
+        <li>Yanlış veya yanıltıcı bilgi girmek</li>
+        <li>Başka bir kullanıcının hesabına yetkisiz erişim sağlamaya çalışmak</li>
+        <li>Platformu otomatik araçlarla (bot, scraper) kötüye kullanmak</li>
+        <li>Yüklediğin belgelerin sahte veya başkasına ait olması</li>
+      </ul>
+
+      <h2>7. Ücretlendirme</h2>
+      <p>
+        Öğrenci eşleştirme sihirbazı ve motivasyon mektubu geri bildirimi ücretsizdir. İndirimli
+        danışmanlık görüşmesi ve danışman/ajans CRM aboneliği gibi ücretli hizmetler için ödeme koşulları
+        bu hizmetler etkinleştirildiğinde ayrıca belirtilecektir.
+      </p>
+
+      <h2>8. Hizmetin Değiştirilmesi</h2>
+      <p>
+        Patika aktif geliştirme aşamasındadır. Özellikler zaman içinde değişebilir, eklenebilir veya
+        kaldırılabilir. Önemli değişiklikler bu sayfa üzerinden duyurulacaktır.
+      </p>
+
+      <h2>9. Sorumluluk Sınırlaması</h2>
+      <p>
+        Patika, platformun kesintisiz veya hatasız çalışacağını garanti etmez. Platform "olduğu gibi"
+        sunulur. Üniversite kabul kararları, danışmanlık tavsiyeleri veya üçüncü taraf hizmetlerin
+        (Google Gemini gibi) ürettiği içerikten kaynaklanan sonuçlardan Patika sorumlu tutulamaz.
+      </p>
+
+      <h2>10. Fesih</h2>
+      <p>
+        Hesabını istediğin zaman kapatabilirsin. Kullanım koşullarını ihlal eden hesapları askıya alma
+        veya kapatma hakkımızı saklı tutarız.
+      </p>
+
+      <h2>11. Geçerli Hukuk</h2>
+      <p>Bu koşullar Türkiye Cumhuriyeti kanunlarına tabidir.</p>
+
+      <h2>12. İletişim</h2>
+      <p>Kullanım koşullarıyla ilgili sorularınız için <a href="/contact">iletişim formunu</a> kullanabilirsiniz.</p>
+    </div>
+  </div>
+
+  {{ macros.site_footer() }}
+</body>
+</html>

@@ -52,7 +52,11 @@
       {{ macros.brand_mark(30, 'bmNav') }}
       <span class="brand-wordmark">PATİKA</span>
     </a>
-    <a class="secondary-btn" href="/login">Giriş yap</a>
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <a href="/about" style="font-size: 14px; text-decoration: none; color: var(--foreground);">Hakkımızda</a>
+      <a href="/blog" style="font-size: 14px; text-decoration: none; color: var(--foreground);">Blog</a>
+      <a class="secondary-btn" href="/login">Giriş yap</a>
+    </div>
   </nav>
 
   <section class="hero">
@@ -160,8 +164,10 @@
     </div>
   </section>
 
-  <footer class="landing-footer">
+  <p class="landing-footer" style="margin-bottom: 0;">
     Zaten bir öğrenci hesabın var mı? <a href="/login">Giriş yap</a>
-  </footer>
+  </p>
+
+  {{ macros.site_footer() }}
 </body>
 </html>

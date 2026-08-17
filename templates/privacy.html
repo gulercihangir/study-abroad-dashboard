@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gizlilik Politikası — Patika</title>
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://study-abroad-dashboard.onrender.com/privacy">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="content-page">
+  {% import '_macros.html' as macros %}
+
+  <nav class="content-nav">
+    <a class="brand-lockup" href="/">
+      {{ macros.brand_mark(28, 'bmPrivacy') }}
+      <span class="brand-wordmark">PATİKA</span>
+    </a>
+    <a class="secondary-btn" href="/" style="text-decoration: none; padding: 9px 18px; font-size: 13px;">Ana Sayfa</a>
+  </nav>
+
+  <div class="content-wrap">
+    <div class="content-eyebrow">Yasal</div>
+    <h1>Gizlilik Politikası</h1>
+    <p class="legal-updated">Son güncelleme: {{ legal_updated }}</p>
+
+    <div class="legal-notice">
+      <strong>Önemli not:</strong> Bu metin, Patika'nın gerçekte topladığı ve işlediği verileri dürüstçe
+      açıklamak amacıyla hazırlanmış bir taslaktır. Bir hukuk danışmanı tarafından incelenmemiştir.
+      KVKK, GDPR veya başka bir yargı alanındaki yasal uyumluluk için yayınlamadan önce mutlaka bir
+      avukata danışın — özellikle pasaport/transkript gibi hassas belgeler işlendiği için.
+    </div>
+
+    <div class="content-body">
+      <h2>1. Kim Olduğumuz</h2>
+      <p>
+        Patika ("biz", "platform"), Türkiye'den Hollanda'ya üniversite eğitimi için ücretsiz eşleştirme ve
+        danışmanlık hizmeti sunan bir web platformudur. Bu politika, platformu kullanan öğrenciler,
+        danışmanlar ve ziyaretçiler için geçerlidir.
+      </p>
+
+      <h2>2. Topladığımız Veriler</h2>
+      <p><strong>Hesap oluştururken:</strong> ad, e-posta adresi, şifre (geri döndürülemez şekilde hash'lenerek saklanır).</p>
+      <p><strong>Öğrenci profili doldurulduğunda:</strong> hedef bölüm, bütçe, tercih edilen bölge, öğrenme
+        tarzı, kariyer hedefi, diploma tipi ve önceliklerin — üniversite eşleştirmesi için kullanılır.</p>
+      <p><strong>Yüklenen belgeler:</strong> transkript, pasaport kopyası, diploma gibi başvuru belgeleri —
+        yalnızca senin ve atanmış danışmanının erişebileceği şekilde veritabanında saklanır.</p>
+      <p><strong>Danışmanlık/iletişim talepleri:</strong> ad, e-posta, ilgilendiğin program ve mesajın.</p>
+      <p><strong>Otomatik olarak:</strong> oturum çerezleri (kimlik doğrulama için, reklam/takip amaçlı değil).</p>
+
+      <h2>3. Verilerini Nasıl Kullanıyoruz</h2>
+      <ul>
+        <li>Seni bütçen ve tercihlerine uygun üniversite/programlarla eşleştirmek</li>
+        <li>Hesabına giriş yapmanı ve oturumunu güvenli tutmak</li>
+        <li>Danışmanınla seni ve checklist/belge durumunu paylaşmak (yalnızca sana atanan danışman)</li>
+        <li>Talep ettiğin durumlarda motivasyon mektubun hakkında otomatik geri bildirim üretmek</li>
+        <li>Şifre sıfırlama ve hesap bildirimleri göndermek</li>
+      </ul>
+
+      <h2>4. Üçüncü Taraf Hizmetler</h2>
+      <p>Verilerini işlemek için aşağıdaki üçüncü taraf hizmetleri kullanıyoruz:</p>
+      <ul>
+        <li><strong>Veritabanı barındırma (Neon, Postgres):</strong> tüm hesap, profil ve belge verilerin burada saklanır.</li>
+        <li><strong>Uygulama barındırma (Render):</strong> platformun çalıştığı sunucu altyapısı.</li>
+        <li><strong>E-posta gönderimi (Resend):</strong> şifre sıfırlama ve bildirim e-postaları bu servis üzerinden gönderilir.</li>
+        <li><strong>Yapay zeka geri bildirimi (Google Gemini API):</strong> motivasyon mektubu geri bildirim aracını kullanırsan, mektup metnin işlenmek üzere Google'ın API'sine gönderilir. Bu özelliği kullanmak zorunlu değildir.</li>
+      </ul>
+      <p>Verilerini hiçbir zaman reklam amacıyla satmıyor veya üçüncü taraflara pazarlama amacıyla paylaşmıyoruz.</p>
+
+      <h2>5. Verilerini Kimlerle Paylaşıyoruz</h2>
+      <p>
+        Öğrenci profilin ve belgelerin yalnızca sana <strong>atanmış danışmanın</strong> tarafından
+        görülebilir. Danışmanlar, kendilerine atanmamış öğrencilerin verilerine erişemez — bu erişim
+        kontrolü sistem seviyesinde uygulanır. Platform yöneticileri (admin) teknik destek amacıyla
+        verilere erişebilir.
+      </p>
+
+      <h2>6. Veri Saklama</h2>
+      <p>
+        Verilerini hesabın aktif olduğu sürece saklarız. Hesabının ve ilişkili verilerinin silinmesini
+        istersen <a href="/contact">iletişim sayfasından</a> bize ulaşabilirsin.
+      </p>
+
+      <h2>7. Haklarınız</h2>
+      <p>Verilerinle ilgili şu talepleri iletebilirsin:</p>
+      <ul>
+        <li>Hangi verilerinin saklandığını öğrenme</li>
+        <li>Yanlış verilerin düzeltilmesi</li>
+        <li>Hesabının ve verilerinin silinmesi</li>
+        <li>Verilerinin başka bir amaçla kullanılmasına itiraz etme</li>
+      </ul>
+      <p>Bu talepler için <a href="/contact">iletişim sayfamızı</a> kullanabilirsin.</p>
+
+      <h2>8. İletişim</h2>
+      <p>Gizlilikle ilgili sorularınız için <a href="/contact">iletişim formunu</a> kullanabilirsiniz.</p>
+    </div>
+  </div>
+
+  {{ macros.site_footer() }}
+</body>
+</html>
