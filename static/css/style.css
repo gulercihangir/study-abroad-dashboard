@@ -691,6 +691,74 @@ body.landing-page {
   color: var(--secondary);
 }
 
+.agency-section {
+  max-width: 1040px;
+  margin: 32px auto 0;
+  padding: 44px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.agency-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.agency-section h2 {
+  font-family: var(--font-display);
+  text-align: left;
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin: 10px 0 16px;
+}
+
+.agency-sub {
+  font-size: 15px;
+  max-width: 480px;
+}
+
+.agency-points {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.agency-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.agency-point-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.agency-point h4 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--foreground);
+}
+
+.agency-point p {
+  margin: 0;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .agency-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .landing-footer {
   max-width: 1040px;
   margin: 0 auto;

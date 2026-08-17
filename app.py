@@ -524,6 +524,44 @@ def home():
     return render_template("index.html")
 
 
+@app.route("/robots.txt")
+def robots_txt():
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Allow: /find-university",
+        "Allow: /consultant/login",
+        "Allow: /consultant/register",
+        "Disallow: /consultant/dashboard",
+        "Disallow: /consultant/student/",
+        "Disallow: /my-checklist",
+        "Disallow: /my-documents",
+        "Disallow: /admin",
+        "",
+        f"Sitemap: {request.host_url}sitemap.xml",
+    ]
+    return Response("\n".join(lines), mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    pages = [
+        ("/", "1.0"),
+        ("/find-university", "0.9"),
+        ("/consultant/login", "0.5"),
+        ("/consultant/register", "0.6"),
+        ("/login", "0.4"),
+        ("/register", "0.4"),
+    ]
+    base = request.host_url.rstrip("/")
+    urls = "\n".join(
+        f"  <url><loc>{base}{path}</loc><priority>{priority}</priority></url>"
+        for path, priority in pages
+    )
+    xml = f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{urls}\n</urlset>'
+    return Response(xml, mimetype="application/xml")
+
+
 @app.route("/api/find-universities", methods=["POST"])
 def find_universities():
     answers = request.json
