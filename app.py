@@ -1,4 +1,5 @@
 import os
+import re
 import csv
 import io
 import secrets
@@ -453,6 +454,25 @@ def _major_alias_match(desired_major, program_major):
     return False
 
 
+MAJOR_STOPWORDS = {"and", "of", "the", "in", "for", "&", "ve", "ile"}
+
+
+def _major_tokens(text):
+    return {w for w in re.findall(r"[a-zçğıöşü]+", text.lower()) if w not in MAJOR_STOPWORDS}
+
+
+def _major_token_overlap_ratio(desired_major, program_major):
+    """Word-level fallback for paraphrases neither an exact/substring match nor
+    a known alias covers — e.g. 'Industrial Engineering' vs 'Industrial Design
+    Engineering': not a substring of each other, but sharing almost every word
+    should still count as a strong (if imperfect) match rather than scoring 0."""
+    desired_tokens = _major_tokens(desired_major)
+    if not desired_tokens:
+        return 0
+    program_tokens = _major_tokens(program_major)
+    return len(desired_tokens & program_tokens) / len(desired_tokens)
+
+
 def score_program(program, university, answers):
     reasons = []
     scores = {}
@@ -462,12 +482,15 @@ def score_program(program, university, answers):
     if desired_major and desired_major == program_major:
         scores["major"] = 100
         reasons.append(f"Exact match for '{answers.get('major')}'")
-    elif desired_major and desired_major in program_major:
+    elif desired_major and (desired_major in program_major or program_major in desired_major):
         scores["major"] = 60
         reasons.append(f"'{answers.get('major')}' is part of this program, but it's not a dedicated program")
     elif desired_major and _major_alias_match(desired_major, program_major):
         scores["major"] = 90
         reasons.append(f"'{answers.get('major')}' matches this program ({program.major})")
+    elif desired_major and _major_token_overlap_ratio(desired_major, program_major) >= 0.6:
+        scores["major"] = 55
+        reasons.append(f"'{answers.get('major')}' is closely related to this program ({program.major}), but not an exact match")
     else:
         scores["major"] = 0
         reasons.append(f"Could not confirm this program matches '{answers.get('major')}'")
