@@ -382,12 +382,6 @@ class StudentAdmin(AdminOnlyAccessMixin, ModelView):
     form_columns = ["name", "email", "consultant"]
 
 
-class DocumentAdmin(AdminOnlyAccessMixin, ModelView):
-    column_list = ["student", "original_filename", "content_type", "uploaded_at"]
-    form_excluded_columns = ["data"]
-    can_create = False
-
-
 TEACHING_STYLE_KEYWORDS = {
     "hands_on": ["hands-on", "hands on", "project-based", "labs", "practical"],
     "lectures": ["lecture", "theory", "theoretical", "academic rigor"],
@@ -1541,18 +1535,28 @@ def import_universities():
 
 admin = Admin(
     app,
-    name="Study Abroad Dashboard Admin",
+    name="Patika Admin",
     theme=Bootstrap4Theme(swatch="darkly"),
     index_view=SecureAdminIndexView(),
 )
-admin.add_view(UniversityAdmin(University, db.session))
-admin.add_view(ProgramAdmin(Program, db.session))
-admin.add_view(SecureModelView(ConsultationLead, db.session))
-admin.add_view(StudentAdmin(Student, db.session))
-admin.add_view(SecureModelView(Consultant, db.session))
-admin.add_view(SecureModelView(SavedAnswers, db.session))
-admin.add_view(SecureModelView(ChecklistItem, db.session))
-admin.add_view(DocumentAdmin(Document, db.session))
+
+# Catalog management - the primary reason any consultant reaches this panel
+# (via the "Manage Universities" button), so it comes first.
+admin.add_view(UniversityAdmin(University, db.session, name="Universities", category="Catalog"))
+admin.add_view(ProgramAdmin(Program, db.session, name="Programs & Requirements", category="Catalog"))
+
+# People management - admin-only. Student<->Consultant assignment now happens
+# through the consultant dashboard's "Bekleyen Öğrenciler" claim flow, so this
+# Student view is kept only as a fallback for edge cases (fixing a typo,
+# reassigning after a consultant leaves) rather than the everyday path.
+#
+# SavedAnswers, ChecklistItem, and Document intentionally have no admin view:
+# they're already fully manageable through the CRM (student profile chips,
+# milestone checklist, and document panel respectively), so a second raw-table
+# CRUD for the same data would just be redundant clutter with no real use.
+admin.add_view(StudentAdmin(Student, db.session, name="Students", category="People"))
+admin.add_view(SecureModelView(Consultant, db.session, name="Consultants", category="People"))
+admin.add_view(SecureModelView(ConsultationLead, db.session, name="Consultation Leads", category="People"))
 
 with app.app_context():
     db.create_all()
