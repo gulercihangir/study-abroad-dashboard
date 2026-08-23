@@ -401,6 +401,57 @@ SOCIAL_SCENE_KEYWORDS = {
     "quiet": ["quiet", "studious", "calm", "peaceful", "academic focus"],
 }
 
+# Turkish students overwhelmingly type their major in Turkish into the free-text
+# field. Without this, "Bilgisayar Mühendisliği" never matches "Computer Science"
+# and every program scores 0 on major fit, so results become effectively random.
+MAJOR_ALIASES = {
+    "computer science": ["bilgisayar mühendisliği", "bilgisayar bilimleri", "bilgisayar muhendisligi", "yazılım mühendisliği", "yazilim muhendisligi", "computer engineering", "software engineering"],
+    "business administration": ["işletme", "isletme", "işletme yönetimi", "isletme yonetimi", "business"],
+    "international business": ["uluslararası ticaret", "uluslararasi ticaret", "uluslararası işletme", "uluslararasi isletme", "international trade"],
+    "international business administration": ["uluslararası işletme yönetimi", "uluslararasi isletme yonetimi"],
+    "psychology": ["psikoloji"],
+    "applied psychology": ["uygulamalı psikoloji", "uygulamali psikoloji"],
+    "mechanical engineering": ["makine mühendisliği", "makina mühendisliği", "makine muhendisligi", "makina muhendisligi"],
+    "electrical engineering": ["elektrik mühendisliği", "elektrik-elektronik mühendisliği", "elektrik elektronik mühendisliği", "elektrik muhendisligi"],
+    "industrial design engineering": ["endüstriyel tasarım mühendisliği", "endustriyel tasarim muhendisligi"],
+    "industrial design": ["endüstriyel tasarım", "endüstri ürünleri tasarımı", "endustriyel tasarim"],
+    "data science": ["veri bilimi"],
+    "aerospace engineering": ["havacılık ve uzay mühendisliği", "havacilik ve uzay muhendisligi", "uçak mühendisliği", "ucak muhendisligi"],
+    "communication": ["iletişim", "iletisim", "halkla ilişkiler", "halkla iliskiler"],
+    "communication science": ["iletişim bilimleri", "iletisim bilimleri"],
+    "international communication management": ["uluslararası iletişim yönetimi", "uluslararasi iletisim yonetimi"],
+    "international relations": ["uluslararası ilişkiler", "uluslararasi iliskiler"],
+    "european studies": ["avrupa çalışmaları", "avrupa calismalari"],
+    "environmental sciences": ["çevre mühendisliği", "cevre muhendisligi", "çevre bilimleri", "cevre bilimleri"],
+    "nutrition and health": ["beslenme ve diyetetik"],
+    "tourism management": ["turizm işletmeciliği", "turizm isletmeciligi", "turizm yönetimi", "turizm yonetimi"],
+    "international hospitality management": ["otelcilik", "turizm ve otel işletmeciliği", "turizm ve otel isletmeciligi"],
+    "logistics engineering": ["lojistik yönetimi", "lojistik yonetimi", "lojistik mühendisliği", "lojistik muhendisligi"],
+    "built environment": ["mimarlık", "mimarlik", "inşaat mühendisliği", "insaat muhendisligi"],
+    "water management": ["su yönetimi", "su yonetimi"],
+    "commercial economics": ["ticari ekonomi"],
+    "creative business": ["yaratıcı işletme", "yaratici isletme"],
+    "media & entertainment management": ["medya yönetimi", "medya yonetimi"],
+    "games & media technology": ["oyun tasarımı", "oyun tasarimi", "oyun geliştirme", "oyun gelistirme"],
+    "fashion & management": ["moda yönetimi", "moda yonetimi"],
+    "ict & software engineering": ["bilgi teknolojileri"],
+    "business information technology": ["işletme bilişim sistemleri", "isletme bilisim sistemleri"],
+    "global sustainability science": ["sürdürülebilirlik bilimi", "surdurulebilirlik bilimi"],
+}
+
+
+def _major_alias_match(desired_major, program_major):
+    """Checks whether a Turkish (or otherwise aliased) major name matches an
+    English program major via the MAJOR_ALIASES table."""
+    for canonical, aliases in MAJOR_ALIASES.items():
+        canonical_hits_program = canonical == program_major or canonical in program_major
+        if not canonical_hits_program:
+            continue
+        for alias in aliases:
+            if desired_major == alias or desired_major in alias or alias in desired_major:
+                return True
+    return False
+
 
 def score_program(program, university, answers):
     reasons = []
@@ -414,6 +465,9 @@ def score_program(program, university, answers):
     elif desired_major and desired_major in program_major:
         scores["major"] = 60
         reasons.append(f"'{answers.get('major')}' is part of this program, but it's not a dedicated program")
+    elif desired_major and _major_alias_match(desired_major, program_major):
+        scores["major"] = 90
+        reasons.append(f"'{answers.get('major')}' matches this program ({program.major})")
     else:
         scores["major"] = 0
         reasons.append(f"Could not confirm this program matches '{answers.get('major')}'")
