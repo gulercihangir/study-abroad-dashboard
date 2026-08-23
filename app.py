@@ -8,7 +8,7 @@ import requests
 import resend
 from google import genai
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, redirect, Response
+from flask import Flask, render_template, request, jsonify, redirect, Response, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
 from flask_admin import Admin, AdminIndexView
@@ -726,6 +726,17 @@ def landing():
 @app.route("/find-university")
 def home():
     return render_template("index.html")
+
+
+@app.route("/sw.js")
+def service_worker():
+    # Served from the root (not /static/) so its default scope covers the
+    # whole site, not just /static/* — service workers can't control pages
+    # outside their own directory unless served from a broader path.
+    response = send_from_directory(app.static_folder, "sw.js")
+    response.headers["Content-Type"] = "application/javascript"
+    response.headers["Service-Worker-Allowed"] = "/"
+    return response
 
 
 @app.route("/robots.txt")
