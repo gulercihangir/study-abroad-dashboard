@@ -406,17 +406,18 @@ SOCIAL_SCENE_KEYWORDS = {
 # field. Without this, "Bilgisayar Mühendisliği" never matches "Computer Science"
 # and every program scores 0 on major fit, so results become effectively random.
 MAJOR_ALIASES = {
-    "computer science": ["bilgisayar mühendisliği", "bilgisayar bilimleri", "bilgisayar muhendisligi", "yazılım mühendisliği", "yazilim muhendisligi", "computer engineering", "software engineering"],
+    "computer science": ["bilgisayar mühendisliği", "bilgisayar bilimleri", "bilgisayar muhendisligi", "yazılım mühendisliği", "yazilim muhendisligi", "computer engineering", "software engineering", "yazilim", "bilgisayar"],
     "business administration": ["işletme", "isletme", "işletme yönetimi", "isletme yonetimi", "business"],
     "international business": ["uluslararası ticaret", "uluslararasi ticaret", "uluslararası işletme", "uluslararasi isletme", "international trade"],
-    "international business administration": ["uluslararası işletme yönetimi", "uluslararasi isletme yonetimi"],
+    "international business administration": ["uluslararası işletme yönetimi", "uluslararasi isletme yonetimi", "isletme"],
     "psychology": ["psikoloji"],
-    "applied psychology": ["uygulamalı psikoloji", "uygulamali psikoloji"],
+    "applied psychology": ["uygulamalı psikoloji", "uygulamali psikoloji", "psikoloji"],
     "mechanical engineering": ["makine mühendisliği", "makina mühendisliği", "makine muhendisligi", "makina muhendisligi"],
-    "electrical engineering": ["elektrik mühendisliği", "elektrik-elektronik mühendisliği", "elektrik elektronik mühendisliği", "elektrik muhendisligi"],
-    "industrial design engineering": ["endüstriyel tasarım mühendisliği", "endustriyel tasarim muhendisligi"],
+    "electrical engineering": ["elektrik mühendisliği", "elektrik", "elektrik muhendisligi","elektrik-elektronik mühendisliği", "elektrik elektronik mühendisligi" "elektrik elektronik mühendisliği", "elektrik muhendisligi"],
+    "industrial engineering": ["endüstri mühendisliği","endustri muhendisligi" ],
     "industrial design": ["endüstriyel tasarım", "endüstri ürünleri tasarımı", "endustriyel tasarim"],
-    "data science": ["veri bilimi"],
+    "data science": ["veri bilimi", "data"],
+    "architecture": ["mimarlik"],
     "aerospace engineering": ["havacılık ve uzay mühendisliği", "havacilik ve uzay muhendisligi", "uçak mühendisliği", "ucak muhendisligi"],
     "communication": ["iletişim", "iletisim", "halkla ilişkiler", "halkla iliskiler"],
     "communication science": ["iletişim bilimleri", "iletisim bilimleri"],
@@ -425,12 +426,12 @@ MAJOR_ALIASES = {
     "european studies": ["avrupa çalışmaları", "avrupa calismalari"],
     "environmental sciences": ["çevre mühendisliği", "cevre muhendisligi", "çevre bilimleri", "cevre bilimleri"],
     "nutrition and health": ["beslenme ve diyetetik"],
-    "tourism management": ["turizm işletmeciliği", "turizm isletmeciligi", "turizm yönetimi", "turizm yonetimi"],
+    "tourism management": ["turizm işletmeciliği", "turizm isletmeciligi", "turizm yönetimi", "turizm yonetimi", "turizm"],
     "international hospitality management": ["otelcilik", "turizm ve otel işletmeciliği", "turizm ve otel isletmeciligi"],
-    "logistics engineering": ["lojistik yönetimi", "lojistik yonetimi", "lojistik mühendisliği", "lojistik muhendisligi"],
+    "logistics engineering": ["lojistik yönetimi", "lojistik yonetimi", "lojistik mühendisliği", "lojistik muhendisligi", "lojistik"],
     "built environment": ["mimarlık", "mimarlik", "inşaat mühendisliği", "insaat muhendisligi"],
     "water management": ["su yönetimi", "su yonetimi"],
-    "commercial economics": ["ticari ekonomi"],
+    "commercial economics": ["ticari ekonomi", "ticaret", "ekonomi"],
     "creative business": ["yaratıcı işletme", "yaratici isletme"],
     "media & entertainment management": ["medya yönetimi", "medya yonetimi"],
     "games & media technology": ["oyun tasarımı", "oyun tasarimi", "oyun geliştirme", "oyun gelistirme"],
@@ -439,7 +440,7 @@ MAJOR_ALIASES = {
     "business information technology": ["işletme bilişim sistemleri", "isletme bilisim sistemleri"],
     "global sustainability science": ["sürdürülebilirlik bilimi", "surdurulebilirlik bilimi"],
 }
-
+fi
 
 def _major_alias_match(desired_major, program_major):
     """Checks whether a Turkish (or otherwise aliased) major name matches an
