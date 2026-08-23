@@ -1062,6 +1062,13 @@ def parse_due_date(due_date_str):
     return None
 
 
+def get_waiting_students():
+    """Students who have signed up but aren't assigned to any consultant yet -
+    visible to every consultant so any of them can claim one, instead of this
+    being done by hand through the admin panel."""
+    return Student.query.filter_by(consultant_id=None).order_by(Student.created_at.asc()).all()
+
+
 def get_consultant_overview(consultant):
     students = Student.query.filter_by(consultant_id=consultant.id).order_by(Student.name.asc()).all()
     student_ids = [s.id for s in students]
@@ -1179,7 +1186,37 @@ def consultant_logout():
 @consultant_required
 def consultant_dashboard():
     student_cards, stats = get_consultant_overview(current_user)
-    return render_template("consultant_dashboard.html", student_cards=student_cards, stats=stats, active_student_id=None)
+    return render_template(
+        "consultant_dashboard.html",
+        student_cards=student_cards,
+        stats=stats,
+        active_student_id=None,
+        waiting_students=get_waiting_students(),
+        claim_error=request.args.get("claim_error"),
+    )
+
+
+@app.route("/consultant/students/<int:student_id>/accept", methods=["POST"])
+@consultant_required
+def accept_waiting_student(student_id):
+    # Atomic claim: the UPDATE only matches (and only one consultant's request
+    # can win) if the student is still unassigned at the moment it runs, so two
+    # consultants clicking "accept" on the same student at the same time can't
+    # both succeed.
+    result = db.session.execute(
+        db.update(Student)
+        .where(Student.id == student_id, Student.consultant_id.is_(None))
+        .values(consultant_id=current_user.id)
+    )
+    db.session.commit()
+
+    if result.rowcount == 0:
+        student = Student.query.get(student_id)
+        if student and student.consultant_id is not None:
+            return redirect(f"/consultant/dashboard?claim_error=Bu öğrenci başka bir danışman tarafından kabul edildi.")
+        return redirect(f"/consultant/dashboard?claim_error=Öğrenci bulunamadı.")
+
+    return redirect(f"/consultant/student/{student_id}")
 
 
 @app.route("/consultant/student/<int:student_id>", methods=["GET", "POST"])

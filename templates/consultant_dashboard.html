@@ -38,9 +38,39 @@
         </div>
       </div>
 
+      {% if claim_error %}
+        <div class="letter-box" style="border-color: var(--warning);">
+          <p style="color: var(--warning); margin: 0;">⚠️ {{ claim_error }}</p>
+        </div>
+      {% endif %}
+
+      <div class="crm-panel">
+        <div class="crm-panel-header">
+          <h2>🙋 Bekleyen Öğrenciler</h2>
+          <span class="crm-panel-header-meta">{{ waiting_students|length }} öğrenci danışman bekliyor</span>
+        </div>
+        {% if waiting_students|length == 0 %}
+          <p style="margin: 12px 0 0;">Şu anda danışman bekleyen öğrenci yok.</p>
+        {% else %}
+          <div class="doc-list" style="margin-top: 14px;">
+            {% for student in waiting_students %}
+              <div class="doc-item">
+                <div>
+                  <div class="doc-item-name">{{ student.name }}</div>
+                  <div class="doc-item-meta">{{ student.email }} &middot; {{ student.created_at.strftime("%d %b %Y") }} tarihinde kaydoldu</div>
+                </div>
+                <form method="POST" action="/consultant/students/{{ student.id }}/accept" style="margin: 0;">
+                  <button type="submit" class="secondary-btn" style="font-size: 13px; padding: 8px 16px; margin: 0;">Kabul Et</button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
       {% if student_cards|length == 0 %}
         <div class="letter-box">
-          <p>No students assigned to you yet. Assignments are currently made by the platform admin — once a student is linked to your account, they'll appear here.</p>
+          <p>Henüz atanmış öğrencin yok. Yukarıdaki "Bekleyen Öğrenciler" listesinden bir öğrenci kabul ettiğinde burada görünecek.</p>
         </div>
       {% else %}
         <div class="crm-panel" style="text-align: center; color: var(--muted-foreground);">
