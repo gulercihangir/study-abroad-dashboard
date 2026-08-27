@@ -1,3 +1,11 @@
+{% macro lang_switcher() %}
+<div class="lang-switcher">
+  <a href="{{ url_for('set_language', code='tr') }}" class="{{ 'lang-active' if current_lang == 'tr' else '' }}">TR</a>
+  <span class="lang-sep">/</span>
+  <a href="{{ url_for('set_language', code='en') }}" class="{{ 'lang-active' if current_lang == 'en' else '' }}">EN</a>
+</div>
+{% endmacro %}
+
 {% macro brand_mark(size=32, grad_id='bmDefault') %}
 <svg class="brand-mark" width="{{ size }}" height="{{ size }}" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
   <path d="M4 25c3.2 0 6.6-.6 8-4s-1-6.4 1-9.6S19.2 8 20.7 11.2s-2 6.2 1 8.7 6.6.9 6.6.9"

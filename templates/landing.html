@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="{{ current_lang }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Patika — Gerçek Veriyle Üniversite Eşleştirme</title>
+  <title>{{ _('Patika — Gerçek Veriyle Üniversite Eşleştirme') }}</title>
   <meta name="description" content="Bütçenden ders çalışma tarzına kadar 9 kısa soruyla Hollanda'daki en uygun üniversite ve bölümlerle ücretsiz eşleş. Danışmanlar için öğrenci takip paneli.">
   <link rel="canonical" href="https://study-abroad-dashboard.onrender.com/">
 
@@ -55,9 +55,10 @@
       <span class="brand-wordmark">PATİKA</span>
     </a>
     <div style="display: flex; align-items: center; gap: 20px;">
-      <a href="/about" style="font-size: 14px; text-decoration: none; color: var(--foreground);">Hakkımızda</a>
-      <a href="/blog" style="font-size: 14px; text-decoration: none; color: var(--foreground);">Blog</a>
-      <a class="secondary-btn" href="/login">Giriş yap</a>
+      <a href="/about" style="font-size: 14px; text-decoration: none; color: var(--foreground);">{{ _('Hakkımızda') }}</a>
+      <a href="/blog" style="font-size: 14px; text-decoration: none; color: var(--foreground);">{{ _('Blog') }}</a>
+      <a class="secondary-btn" href="/login">{{ _('Giriş yap') }}</a>
+      {{ macros.lang_switcher() }}
     </div>
   </nav>
 
@@ -65,16 +66,15 @@
     <div class="hero-glow"></div>
     <div class="hero-grid">
       <div>
-        <div class="hero-eyebrow">Gerçek veriyle, adım adım</div>
-        <h1>Doğru üniversiteyi,<br>doğru bölümü,<br><span>gerçek veriyle</span> bul.</h1>
+        <div class="hero-eyebrow">{{ _('Gerçek veriyle, adım adım') }}</div>
+        <h1>{{ _('Doğru üniversiteyi,<br>doğru bölümü,<br><span>gerçek veriyle</span> bul.')|safe }}</h1>
         <p class="hero-sub">
-          Bütçenden ders çalışma tarzına kadar 9 kısa soruyla seni Hollanda'daki en uygun
-          üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, karşılaştırılabilir veri.
+          {{ _("Bütçenden ders çalışma tarzına kadar 9 kısa soruyla seni Hollanda'daki en uygun üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, karşılaştırılabilir veri.") }}
         </p>
         <div class="trust-row">
-          <span class="trust-item">Ücretsiz eşleşme</span>
-          <span class="trust-item">Gerçek maliyet verisi</span>
-          <span class="trust-item">Şeffaf süreç</span>
+          <span class="trust-item">{{ _('Ücretsiz eşleşme') }}</span>
+          <span class="trust-item">{{ _('Gerçek maliyet verisi') }}</span>
+          <span class="trust-item">{{ _('Şeffaf süreç') }}</span>
         </div>
       </div>
 
@@ -92,19 +92,19 @@
                 stroke="url(#heroTrail)" stroke-width="1" stroke-linecap="round" opacity="0.35" />
 
           <circle cx="40" cy="350" r="5" fill="var(--secondary)"/>
-          <text x="54" y="354" class="hero-waypoint-label">BÖLÜM</text>
+          <text x="54" y="354" class="hero-waypoint-label">{{ _('BÖLÜM') }}</text>
 
           <circle cx="110" cy="260" r="4.5" fill="var(--foreground)" fill-opacity="0.85"/>
-          <text x="122" y="264" class="hero-waypoint-label">BÜTÇE</text>
+          <text x="122" y="264" class="hero-waypoint-label">{{ _('BÜTÇE') }}</text>
 
           <circle cx="40" cy="170" r="4.5" fill="var(--foreground)" fill-opacity="0.85"/>
-          <text x="54" y="174" class="hero-waypoint-label">ŞEHİR</text>
+          <text x="54" y="174" class="hero-waypoint-label">{{ _('ŞEHİR') }}</text>
 
           <circle cx="190" cy="110" r="4.5" fill="var(--foreground)" fill-opacity="0.85"/>
-          <text x="202" y="114" class="hero-waypoint-label">TERCİH</text>
+          <text x="202" y="114" class="hero-waypoint-label">{{ _('TERCİH') }}</text>
 
           <circle cx="200" cy="35" r="7" fill="url(#heroTrail)"/>
-          <text x="196" y="16" class="hero-waypoint-label" style="font-weight:600;">EŞLEŞME</text>
+          <text x="196" y="16" class="hero-waypoint-label" style="font-weight:600;">{{ _('EŞLEŞME') }}</text>
         </svg>
       </div>
     </div>
@@ -114,16 +114,16 @@
     <div class="portal-grid">
       <a class="portal-card" href="/find-university">
         <span class="portal-icon">🎓</span>
-        <h3>Öğrenci Portalı</h3>
-        <p>Bölüm, bütçe ve tercihlerine göre en uygun üniversiteleri ücretsiz keşfet.</p>
-        <span class="portal-cta">Keşfetmeye başla →</span>
+        <h3>{{ _('Öğrenci Portalı') }}</h3>
+        <p>{{ _('Bölüm, bütçe ve tercihlerine göre en uygun üniversiteleri ücretsiz keşfet.') }}</p>
+        <span class="portal-cta">{{ _('Keşfetmeye başla →') }}</span>
       </a>
 
       <a class="portal-card" href="/consultant/login">
         <span class="portal-icon">💼</span>
-        <h3>Danışman Portalı</h3>
-        <p>Atanmış öğrencilerini takip et, checklist yönet, ilerlemeyi izle.</p>
-        <span class="portal-cta">Panele git →</span>
+        <h3>{{ _('Danışman Portalı') }}</h3>
+        <p>{{ _('Atanmış öğrencilerini takip et, checklist yönet, ilerlemeyi izle.') }}</p>
+        <span class="portal-cta">{{ _('Panele git →') }}</span>
       </a>
     </div>
   </section>
@@ -131,35 +131,33 @@
   <section class="agency-section">
     <div class="agency-grid">
       <div>
-        <div class="hero-eyebrow">Danışmanlar ve Ajanslar İçin</div>
-        <h2>Öğrencilerin senin kontrolünde kalır — sadece dağınıklık ortadan kalkar.</h2>
+        <div class="hero-eyebrow">{{ _('Danışmanlar ve Ajanslar İçin') }}</div>
+        <h2>{{ _('Öğrencilerin senin kontrolünde kalır — sadece dağınıklık ortadan kalkar.') }}</h2>
         <p class="agency-sub">
-          WhatsApp grupları ve Excel tabloları yerine tek bir panelde: sana atanmış öğrenciler,
-          checklist'ler, belgeler ve son tarihler. Öğrenciler yalnızca kendi danışmanına bağlanır —
-          açık bir pazar yeri değildir.
+          {{ _("WhatsApp grupları ve Excel tabloları yerine tek bir panelde: sana atanmış öğrenciler, checklist'ler, belgeler ve son tarihler. Öğrenciler yalnızca kendi danışmanına bağlanır — açık bir pazar yeri değildir.") }}
         </p>
-        <a class="secondary-btn" style="display: inline-block; text-decoration: none; margin-top: 8px;" href="/consultant/register">Danışman olarak katıl →</a>
+        <a class="secondary-btn" style="display: inline-block; text-decoration: none; margin-top: 8px;" href="/consultant/register">{{ _('Danışman olarak katıl →') }}</a>
       </div>
       <div class="agency-points">
         <div class="agency-point">
           <span class="agency-point-icon">🔒</span>
           <div>
-            <h4>Kendi öğrencilerin, kendi kontrolünde</h4>
-            <p>Her öğrenci yalnızca kendisine atanmış danışmana bağlanır.</p>
+            <h4>{{ _('Kendi öğrencilerin, kendi kontrolünde') }}</h4>
+            <p>{{ _('Her öğrenci yalnızca kendisine atanmış danışmana bağlanır.') }}</p>
           </div>
         </div>
         <div class="agency-point">
           <span class="agency-point-icon">📋</span>
           <div>
-            <h4>Tek panelde checklist ve belgeler</h4>
-            <p>Kimin hangi aşamada olduğunu ve hangi belgenin eksik olduğunu anında gör.</p>
+            <h4>{{ _('Tek panelde checklist ve belgeler') }}</h4>
+            <p>{{ _('Kimin hangi aşamada olduğunu ve hangi belgenin eksik olduğunu anında gör.') }}</p>
           </div>
         </div>
         <div class="agency-point">
           <span class="agency-point-icon">⏰</span>
           <div>
-            <h4>Son tarihleri kaçırma</h4>
-            <p>Bu hafta teslim tarihi yaklaşan başvurular tek bakışta önünde.</p>
+            <h4>{{ _('Son tarihleri kaçırma') }}</h4>
+            <p>{{ _('Bu hafta teslim tarihi yaklaşan başvurular tek bakışta önünde.') }}</p>
           </div>
         </div>
       </div>
@@ -167,7 +165,7 @@
   </section>
 
   <p class="landing-footer" style="margin-bottom: 0;">
-    Zaten bir öğrenci hesabın var mı? <a href="/login">Giriş yap</a>
+    {{ _('Zaten bir öğrenci hesabın var mı?') }} <a href="/login">{{ _('Giriş yap') }}</a>
   </p>
 
   {{ macros.site_footer() }}

@@ -1,0 +1,153 @@
+# Translations template for PROJECT.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-08-24 20:42+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: templates/landing.html:6
+msgid "Patika — Gerçek Veriyle Üniversite Eşleştirme"
+msgstr ""
+
+#: templates/landing.html:58
+msgid "Hakkımızda"
+msgstr ""
+
+#: templates/landing.html:59
+msgid "Blog"
+msgstr ""
+
+#: templates/landing.html:60 templates/landing.html:168
+msgid "Giriş yap"
+msgstr ""
+
+#: templates/landing.html:69
+msgid "Gerçek veriyle, adım adım"
+msgstr ""
+
+#: templates/landing.html:70
+msgid "Doğru üniversiteyi,<br>doğru bölümü,<br><span>gerçek veriyle</span> bul."
+msgstr ""
+
+#: templates/landing.html:72
+msgid ""
+"Bütçenden ders çalışma tarzına kadar 9 kısa soruyla seni Hollanda'daki en"
+" uygun üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, "
+"karşılaştırılabilir veri."
+msgstr ""
+
+#: templates/landing.html:75
+msgid "Ücretsiz eşleşme"
+msgstr ""
+
+#: templates/landing.html:76
+msgid "Gerçek maliyet verisi"
+msgstr ""
+
+#: templates/landing.html:77
+msgid "Şeffaf süreç"
+msgstr ""
+
+#: templates/landing.html:95
+msgid "BÖLÜM"
+msgstr ""
+
+#: templates/landing.html:98
+msgid "BÜTÇE"
+msgstr ""
+
+#: templates/landing.html:101
+msgid "ŞEHİR"
+msgstr ""
+
+#: templates/landing.html:104
+msgid "TERCİH"
+msgstr ""
+
+#: templates/landing.html:107
+msgid "EŞLEŞME"
+msgstr ""
+
+#: templates/landing.html:117
+msgid "Öğrenci Portalı"
+msgstr ""
+
+#: templates/landing.html:118
+msgid "Bölüm, bütçe ve tercihlerine göre en uygun üniversiteleri ücretsiz keşfet."
+msgstr ""
+
+#: templates/landing.html:119
+msgid "Keşfetmeye başla →"
+msgstr ""
+
+#: templates/landing.html:124
+msgid "Danışman Portalı"
+msgstr ""
+
+#: templates/landing.html:125
+msgid "Atanmış öğrencilerini takip et, checklist yönet, ilerlemeyi izle."
+msgstr ""
+
+#: templates/landing.html:126
+msgid "Panele git →"
+msgstr ""
+
+#: templates/landing.html:134
+msgid "Danışmanlar ve Ajanslar İçin"
+msgstr ""
+
+#: templates/landing.html:135
+msgid "Öğrencilerin senin kontrolünde kalır — sadece dağınıklık ortadan kalkar."
+msgstr ""
+
+#: templates/landing.html:137
+msgid ""
+"WhatsApp grupları ve Excel tabloları yerine tek bir panelde: sana atanmış"
+" öğrenciler, checklist'ler, belgeler ve son tarihler. Öğrenciler yalnızca"
+" kendi danışmanına bağlanır — açık bir pazar yeri değildir."
+msgstr ""
+
+#: templates/landing.html:139
+msgid "Danışman olarak katıl →"
+msgstr ""
+
+#: templates/landing.html:145
+msgid "Kendi öğrencilerin, kendi kontrolünde"
+msgstr ""
+
+#: templates/landing.html:146
+msgid "Her öğrenci yalnızca kendisine atanmış danışmana bağlanır."
+msgstr ""
+
+#: templates/landing.html:152
+msgid "Tek panelde checklist ve belgeler"
+msgstr ""
+
+#: templates/landing.html:153
+msgid "Kimin hangi aşamada olduğunu ve hangi belgenin eksik olduğunu anında gör."
+msgstr ""
+
+#: templates/landing.html:159
+msgid "Son tarihleri kaçırma"
+msgstr ""
+
+#: templates/landing.html:160
+msgid "Bu hafta teslim tarihi yaklaşan başvurular tek bakışta önünde."
+msgstr ""
+
+#: templates/landing.html:168
+msgid "Zaten bir öğrenci hesabın var mı?"
+msgstr ""
+

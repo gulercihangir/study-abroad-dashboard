@@ -9,7 +9,8 @@ import requests
 import resend
 from google import genai
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, redirect, Response, send_from_directory
+from flask import Flask, render_template, request, jsonify, redirect, Response, send_from_directory, session
+from flask_babel import Babel
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
 from flask_admin import Admin, AdminIndexView
@@ -33,6 +34,26 @@ app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-this-to-something-random")
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 MB per upload
 db = SQLAlchemy(app)
+
+SUPPORTED_LANGUAGES = ["tr", "en"]
+app.config["BABEL_DEFAULT_LOCALE"] = "tr"
+app.config["BABEL_TRANSLATION_DIRECTORIES"] = os.path.join(BASE_DIR, "translations")
+
+
+def select_locale():
+    if session.get("lang") in SUPPORTED_LANGUAGES:
+        return session["lang"]
+    return request.accept_languages.best_match(SUPPORTED_LANGUAGES) or "tr"
+
+
+babel = Babel(app, locale_selector=select_locale)
+
+
+@app.route("/lang/<code>")
+def set_language(code):
+    if code in SUPPORTED_LANGUAGES:
+        session["lang"] = code
+    return redirect(request.referrer or "/")
 
 ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "doc", "docx", "jpg", "jpeg", "png"}
 
@@ -440,7 +461,7 @@ MAJOR_ALIASES = {
     "business information technology": ["işletme bilişim sistemleri", "isletme bilisim sistemleri"],
     "global sustainability science": ["sürdürülebilirlik bilimi", "surdurulebilirlik bilimi"],
 }
-fi
+
 
 def _major_alias_match(desired_major, program_major):
     """Checks whether a Turkish (or otherwise aliased) major name matches an
@@ -618,6 +639,7 @@ def inject_site_globals():
     return {
         "current_year": datetime.utcnow().year,
         "legal_updated": "17 Ağustos 2026",
+        "current_lang": select_locale(),
     }
 
 

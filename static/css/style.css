@@ -523,6 +523,28 @@ body.landing-page {
   text-decoration: none;
 }
 
+.lang-switcher {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lang-switcher a {
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+
+.lang-switcher a.lang-active {
+  color: var(--foreground);
+}
+
+.lang-switcher .lang-sep {
+  color: var(--muted-foreground);
+  opacity: 0.5;
+}
+
 .hero {
   position: relative;
   max-width: 1040px;
