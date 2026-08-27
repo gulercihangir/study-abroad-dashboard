@@ -94,25 +94,27 @@ function findMatches() {
     });
 }
 
-function renderPurchasingPower(pp) {
+function renderPurchasingPower(ppList) {
   const container = document.getElementById("purchasing-power-info");
 
-  if (!pp) {
+  if (!ppList || ppList.length === 0) {
     container.classList.add("hidden");
     return;
   }
 
-  container.innerHTML = `
-    <h3>Living in ${pp.country}</h3>
-    <p>General cost-of-living context — same for all results shown, since this covers the whole country, not individual cities.</p>
-    <div class="pp-grid">
-      <div class="pp-stat"><div class="pp-value">${pp.cost_index}/100</div><div class="pp-label">Overall affordability</div></div>
-      <div class="pp-stat"><div class="pp-value">$${pp.monthly_estimate_usd}</div><div class="pp-label">Avg. monthly cost</div></div>
-      <div class="pp-stat"><div class="pp-value">${pp.grocery_index}/100</div><div class="pp-label">Grocery affordability</div></div>
-      <div class="pp-stat"><div class="pp-value">${pp.transport_index}/100</div><div class="pp-label">Transport affordability</div></div>
+  container.innerHTML = ppList.map(pp => `
+    <div class="pp-block">
+      <h3>Living in ${pp.country}</h3>
+      <p>General cost-of-living context for ${pp.country} — covers the whole country, not individual cities.</p>
+      <div class="pp-grid">
+        <div class="pp-stat"><div class="pp-value">${pp.cost_index}/100</div><div class="pp-label">Overall affordability</div></div>
+        <div class="pp-stat"><div class="pp-value">$${pp.monthly_estimate_usd}</div><div class="pp-label">Avg. monthly cost</div></div>
+        <div class="pp-stat"><div class="pp-value">${pp.grocery_index}/100</div><div class="pp-label">Grocery affordability</div></div>
+        <div class="pp-stat"><div class="pp-value">${pp.transport_index}/100</div><div class="pp-label">Transport affordability</div></div>
+      </div>
+      <p class="pp-source">Source: ${pp.source}. Higher scores = more affordable.</p>
     </div>
-    <p class="pp-source">Source: ${pp.source}. Higher scores = more affordable.</p>
-  `;
+  `).join("");
   container.classList.remove("hidden");
 }
 
@@ -136,7 +138,7 @@ function renderResults(results) {
       : r.numerus_fixus === "no" ? "Open enrollment" : "Numerus fixus status unknown";
 
     card.innerHTML = `
-      <h3>${index + 1}. ${r.program_name} — ${r.university_name} (${r.city || "Unknown city"})</h3>
+      <h3>${index + 1}. ${r.program_name} — ${r.university_name} (${r.city || "Unknown city"}${r.country ? ", " + r.country : ""})</h3>
       <p><strong>Match Score:</strong> ${r.score}/100</p>
       <p><strong>Estimated monthly cost:</strong> €${totalCost.toFixed(0)}</p>
       <p><strong>Application deadline:</strong> ${r.application_deadline || "Not specified — check website"}</p>

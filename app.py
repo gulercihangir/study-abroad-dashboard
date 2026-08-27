@@ -135,6 +135,7 @@ Letter:
 class University(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
+    country = db.Column(db.String(100), nullable=False, default="Netherlands")
     city = db.Column(db.String(100))
     region = db.Column(db.String(100))
     cost_of_living_monthly = db.Column(db.Float)
@@ -385,7 +386,7 @@ class UniversityAdmin(ConsultantAccessMixin, ModelView):
             ("quiet", "Quiet & studious"),
         ],
     }
-    column_list = ["name", "city", "region", "cost_of_living_monthly", "rent_estimate_monthly", "campus_type", "social_scene"]
+    column_list = ["name", "country", "city", "region", "cost_of_living_monthly", "rent_estimate_monthly", "campus_type", "social_scene"]
     form_excluded_columns = ["programs"]
 
 
@@ -537,16 +538,17 @@ def score_program(program, university, answers):
         reasons.append("Cost data incomplete for this university")
 
     preferred_region = (answers.get("region") or "").strip().lower()
-    uni_region = (university.region or "").lower()
+    uni_location = " ".join(filter(None, [university.city, university.region, university.country])).lower()
+    location_label = ", ".join(filter(None, [university.city, university.country])) or (university.region or "")
     if not preferred_region or preferred_region == "no preference":
         scores["region"] = 100
         reasons.append("No region preference specified")
-    elif preferred_region in uni_region:
+    elif preferred_region in uni_location:
         scores["region"] = 100
-        reasons.append(f"Located in your preferred region ({university.region})")
+        reasons.append(f"Located in your preferred region ({location_label})")
     else:
         scores["region"] = 20
-        reasons.append(f"Located in {university.region}, outside your stated preference")
+        reasons.append(f"Located in {location_label}, outside your stated preference")
 
     transport = university.transport_score or 5
     scores["transport"] = transport * 10
@@ -890,11 +892,21 @@ def find_universities():
     results.sort(key=lambda r: r["score"], reverse=True)
     top_matches = results[:5]
 
+    matched_countries = []
+    for r in top_matches:
+        country = r["university"].country
+        if country not in matched_countries:
+            matched_countries.append(country)
+    purchasing_power = [
+        ctx for ctx in (get_purchasing_power_context(c) for c in matched_countries) if ctx
+    ]
+
     return jsonify({
         "results": [
             {
                 "university_name": r["university"].name,
                 "program_name": r["program"].major,
+                "country": r["university"].country,
                 "city": r["university"].city,
                 "region": r["university"].region,
                 "score": r["score"],
@@ -908,7 +920,7 @@ def find_universities():
             }
             for r in top_matches
         ],
-        "purchasing_power": get_purchasing_power_context("Netherlands"),
+        "purchasing_power": purchasing_power,
     })
 
 
@@ -1466,7 +1478,7 @@ def download_document(doc_id):
 # ─── Bulk university import/export (consultant only) ───────────────────────
 
 UNIVERSITY_CSV_COLUMNS = [
-    "action", "university_name", "city", "region", "cost_of_living_monthly",
+    "action", "university_name", "country", "city", "region", "cost_of_living_monthly",
     "rent_estimate_monthly", "transport_score", "website_url", "teaching_style",
     "career_focus", "campus_type", "social_scene", "major", "application_deadline",
     "numerus_fixus", "prerequisites", "required_documents",
@@ -1480,7 +1492,7 @@ def universities_csv_template():
     writer = csv.DictWriter(output, fieldnames=UNIVERSITY_CSV_COLUMNS)
     writer.writeheader()
     writer.writerow({
-        "action": "", "university_name": "Erasmus Universiteit Rotterdam", "city": "Rotterdam",
+        "action": "", "university_name": "Erasmus Universiteit Rotterdam", "country": "Netherlands", "city": "Rotterdam",
         "region": "Zuid-Holland", "cost_of_living_monthly": "2000", "rent_estimate_monthly": "1250",
         "transport_score": "9", "website_url": "https://www.eur.nl/en",
         "teaching_style": "Problem-based learning, small group work, collaborative seminars",
@@ -1492,7 +1504,7 @@ def universities_csv_template():
         "required_documents": "Diploma, transcript, motivation letter, CV, English test score",
     })
     writer.writerow({
-        "action": "delete", "university_name": "Old University To Remove", "city": "", "region": "",
+        "action": "delete", "university_name": "Old University To Remove", "country": "", "city": "", "region": "",
         "cost_of_living_monthly": "", "rent_estimate_monthly": "", "transport_score": "", "website_url": "",
         "teaching_style": "", "career_focus": "", "campus_type": "", "social_scene": "",
         "major": "", "application_deadline": "", "numerus_fixus": "", "prerequisites": "", "required_documents": "",
@@ -1584,6 +1596,7 @@ def import_universities():
 
         university = University.query.filter_by(name=name).first()
         uni_fields = {
+            "country": (row.get("country") or "").strip() or None,
             "city": (row.get("city") or "").strip() or None,
             "region": (row.get("region") or "").strip() or None,
             "cost_of_living_monthly": _parse_float(row.get("cost_of_living_monthly")),
@@ -1597,6 +1610,7 @@ def import_universities():
         }
 
         if not university:
+            uni_fields["country"] = uni_fields["country"] or "Netherlands"
             university = University(name=name, **uni_fields)
             db.session.add(university)
             db.session.flush()
