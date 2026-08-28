@@ -138,6 +138,9 @@ class University(db.Model):
     country = db.Column(db.String(100), nullable=False, default="Netherlands")
     city = db.Column(db.String(100))
     region = db.Column(db.String(100))
+    # Non-rent monthly essentials only (groceries, utilities, transport, phone, misc).
+    # Added to rent_estimate_monthly for a student's total monthly budget — do not
+    # include rent here or the total will double-count it.
     cost_of_living_monthly = db.Column(db.Float)
     rent_estimate_monthly = db.Column(db.Float)
     transport_score = db.Column(db.Integer)
@@ -388,6 +391,10 @@ class UniversityAdmin(ConsultantAccessMixin, ModelView):
     }
     column_list = ["name", "country", "city", "region", "cost_of_living_monthly", "rent_estimate_monthly", "campus_type", "social_scene"]
     form_excluded_columns = ["programs"]
+    column_descriptions = {
+        "cost_of_living_monthly": "Non-rent essentials only (groceries, utilities, transport, phone, misc). Rent goes in the field below — don't include it here.",
+        "rent_estimate_monthly": "Estimated monthly rent for a student.",
+    }
 
 
 class ProgramAdmin(ConsultantAccessMixin, ModelView):
