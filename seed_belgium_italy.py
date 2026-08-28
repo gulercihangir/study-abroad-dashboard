@@ -4,11 +4,14 @@ programs (admission requirements). Safe to re-run — skips any university that
 already exists by name, and skips any program that already exists for that
 university by major.
 
-Application deadlines, admission-test requirements, and cost estimates below
-are starting points based on general knowledge of each institution and should
-be verified against the university's own admissions page before being relied
-on by students — use the admin panel or the CSV import tool to correct any
-entry once verified.
+Deadlines, program names, and numerus fixus status below have been checked
+against each university's official admissions pages (Aug 2026). A few
+programs turned out to have no English-taught track at all (KU Leuven CS,
+Ghent Economics/Biomedical Sciences, VUB CS, Bologna CS) — those are kept
+under their real native-language name with a note explaining the language
+gap, rather than removed, so consultants can still see what's actually on
+offer at that university. Re-verify before a new admissions cycle, since
+deadlines and program lists change year to year.
 
 Usage:
     venv/Scripts/python.exe seed_belgium_italy.py
@@ -34,17 +37,17 @@ UNIVERSITIES = [
         "programs": [
             {
                 "major": "Business Engineering",
-                "application_deadline": "1 May 2026",
-                "numerus_fixus": "no",
-                "prerequisites": "Strong secondary school math grades; English proficiency (IELTS 6.5+ or equivalent)",
+                "application_deadline": "Non-EU: 1 Mar 2026; EU: 1 Jun 2026",
+                "numerus_fixus": "yes",
+                "prerequisites": "Taught at KU Leuven's Brussels campus, not Leuven. Strong secondary school math grades; English proficiency (IELTS 6.5+ or equivalent).",
                 "required_documents": "Diploma, transcript, motivation letter, English test score",
             },
             {
-                "major": "Computer Science",
-                "application_deadline": "1 May 2026",
+                "major": "Bachelor in de Informatica (Dutch-taught)",
+                "application_deadline": "No English track — see note",
                 "numerus_fixus": "no",
-                "prerequisites": "Secondary school math; prior programming exposure recommended",
-                "required_documents": "Diploma, transcript, motivation letter, English test score",
+                "prerequisites": "No English-taught Computer Science bachelor's exists at KU Leuven — this is the Dutch-medium track (offered at Leuven and Kortrijk). Requires Dutch language proficiency (NT2 or equivalent); not realistic for a Turkish applicant without prior Dutch study.",
+                "required_documents": "Diploma, transcript, Dutch language proficiency proof",
             },
         ],
     },
@@ -63,18 +66,18 @@ UNIVERSITIES = [
         "social_scene": "Compact historic city center with a lively student population",
         "programs": [
             {
-                "major": "Economics",
-                "application_deadline": "1 June 2026",
+                "major": "Bachelor of Science in de Economische Wetenschappen (Dutch-taught)",
+                "application_deadline": "No English track — see note",
                 "numerus_fixus": "no",
-                "prerequisites": "Secondary school math recommended",
-                "required_documents": "Diploma, transcript, English test score",
+                "prerequisites": "No English-taught Economics bachelor's exists at Ghent University — all bachelor's programmes are Dutch-medium (except the Bachelor of Social Sciences). Requires Dutch language proficiency; not realistic for a Turkish applicant without prior Dutch study.",
+                "required_documents": "Diploma, transcript, Dutch language proficiency proof",
             },
             {
-                "major": "Biomedical Sciences",
-                "application_deadline": "1 May 2026",
+                "major": "Biomedische Wetenschappen (Dutch-taught)",
+                "application_deadline": "No English track — see note",
                 "numerus_fixus": "yes",
-                "prerequisites": "Strong secondary school biology and chemistry grades",
-                "required_documents": "Diploma, transcript, motivation letter, English test score",
+                "prerequisites": "No English-taught Biomedical Sciences bachelor's confirmed at Ghent University — this is the Dutch-medium track. Requires Dutch language proficiency; not realistic for a Turkish applicant without prior Dutch study.",
+                "required_documents": "Diploma, transcript, Dutch language proficiency proof",
             },
         ],
     },
@@ -93,17 +96,17 @@ UNIVERSITIES = [
         "social_scene": "International capital-city setting with a large expat and diplomatic community",
         "programs": [
             {
-                "major": "International Business",
-                "application_deadline": "31 May 2026",
+                "major": "Bachelor in Economic Sciences (Solvay Brussels)",
+                "application_deadline": "Non-EU: 30 Apr 2026; EU: 30 Sep 2026",
                 "numerus_fixus": "no",
-                "prerequisites": "English or French proficiency depending on the program track",
+                "prerequisites": "Historically French-taught; ULB added an English-taught version of this programme starting September 2024 — verify current-year English availability before applying. French proficiency is a safer fallback requirement.",
                 "required_documents": "Diploma, transcript, motivation letter, language test score",
             },
             {
                 "major": "Political Science",
-                "application_deadline": "31 May 2026",
+                "application_deadline": "Non-EU: 30 Apr 2026; EU: 30 Sep 2026",
                 "numerus_fixus": "no",
-                "prerequisites": "Secondary school humanities/social science background recommended",
+                "prerequisites": "Bilingual French/English/Dutch programme (SciencePo-ULB) — French proficiency required alongside English, not a pure English track. Secondary school humanities/social science background recommended.",
                 "required_documents": "Diploma, transcript, motivation letter",
             },
         ],
@@ -123,15 +126,15 @@ UNIVERSITIES = [
         "social_scene": "Diverse international student body in a multicultural capital city",
         "programs": [
             {
-                "major": "Computer Science",
-                "application_deadline": "1 May 2026",
+                "major": "Computerwetenschappen (Dutch-taught)",
+                "application_deadline": "No English track — see note",
                 "numerus_fixus": "no",
-                "prerequisites": "Secondary school math; programming exposure helpful",
-                "required_documents": "Diploma, transcript, motivation letter, English test score",
+                "prerequisites": "No English-taught Computer Science bachelor's exists at VUB — this is the Dutch-medium track. Requires Dutch language proficiency; not realistic for a Turkish applicant without prior Dutch study.",
+                "required_documents": "Diploma, transcript, Dutch language proficiency proof",
             },
             {
                 "major": "Business Engineering",
-                "application_deadline": "1 May 2026",
+                "application_deadline": "Non-EEA: 1 Apr 2026; EEA: 1 Sep 2026",
                 "numerus_fixus": "no",
                 "prerequisites": "Strong secondary school math grades",
                 "required_documents": "Diploma, transcript, motivation letter, English test score",
@@ -184,17 +187,17 @@ UNIVERSITIES = [
         "social_scene": "Selective, career-focused student body with an active international exchange network",
         "programs": [
             {
-                "major": "Economics and Management",
+                "major": "Management",
                 "application_deadline": "Rolling rounds — check current cycle",
                 "numerus_fixus": "yes",
-                "prerequisites": "Strong academic record; Bocconi admission test or SAT/ACT",
+                "prerequisites": "Official Bocconi programme name is Management (not Economics and Management). Strong academic record; Bocconi admission test or SAT/ACT.",
                 "required_documents": "Diploma, transcript, motivation letter, admission test score, English test score",
             },
             {
-                "major": "International Business",
+                "major": "World Bachelor in Business",
                 "application_deadline": "Rolling rounds — check current cycle",
                 "numerus_fixus": "yes",
-                "prerequisites": "Strong academic record; admission test required",
+                "prerequisites": "Joint programme with USC and HKUST (three campuses over the degree); highly selective. Strong academic record; admission test required.",
                 "required_documents": "Diploma, transcript, motivation letter, admission test score, English test score",
             },
         ],
@@ -214,15 +217,15 @@ UNIVERSITIES = [
         "social_scene": "One of Europe's largest universities, set in a major historic capital city",
         "programs": [
             {
-                "major": "Engineering",
-                "application_deadline": "Admission test — check current cycle",
+                "major": "Computer and System Engineering",
+                "application_deadline": "Non-EU: 15 May 2026; EU: 31 Jul 2026",
                 "numerus_fixus": "yes",
-                "prerequisites": "Strong secondary school math and physics grades; entrance test required",
+                "prerequisites": "Strong secondary school math and physics grades; entrance test (TOLC-I) required",
                 "required_documents": "Diploma, transcript, English test score, admission test result",
             },
             {
-                "major": "Economics",
-                "application_deadline": "1 June 2026",
+                "major": "Economics and Finance",
+                "application_deadline": "Non-EU: 15 May 2026; EU: 31 Jul 2026",
                 "numerus_fixus": "no",
                 "prerequisites": "Secondary school math recommended",
                 "required_documents": "Diploma, transcript, English test score",
@@ -244,18 +247,18 @@ UNIVERSITIES = [
         "social_scene": "Large, lively student population that shapes the whole city's culture",
         "programs": [
             {
-                "major": "International Business and Management",
+                "major": "Business and Economics (CLaBE)",
                 "application_deadline": "1 May 2026",
-                "numerus_fixus": "no",
-                "prerequisites": "Strong academic record; English test required",
+                "numerus_fixus": "yes",
+                "prerequisites": "Restricted entry — entrance exam, about 240 seats. Strong academic record; English test required.",
                 "required_documents": "Diploma, transcript, motivation letter, English test score",
             },
             {
-                "major": "Computer Science",
-                "application_deadline": "1 May 2026",
+                "major": "Informatica (Italian-taught)",
+                "application_deadline": "No English track — see note",
                 "numerus_fixus": "no",
-                "prerequisites": "Secondary school math recommended",
-                "required_documents": "Diploma, transcript, motivation letter, English test score",
+                "prerequisites": "No English-taught Computer Science bachelor's found at Bologna — only an Italian-medium bachelor's and an English-taught Master's exist. Requires Italian language proficiency; not realistic for a Turkish applicant without prior Italian study.",
+                "required_documents": "Diploma, transcript, Italian language proficiency proof",
             },
         ],
     },
