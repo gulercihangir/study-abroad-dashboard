@@ -53,6 +53,7 @@
 
   <div id="step-1" class="wizard-step">
     <h2>What do you want to study?</h2>
+    <p>You can list more than one — separate with commas.</p>
     <input type="text" id="student-major" placeholder="e.g. Computer Science, Psychology, Engineering" />
     <br>
     <button onclick="saveMajor()">Next</button>
@@ -68,7 +69,8 @@
 
   <div id="step-3" class="wizard-step hidden">
     <h2>Any preferred region?</h2>
-    <input type="text" id="student-region" placeholder="e.g. Rotterdam, Leuven, Milan, or a country like Italy — leave blank for no preference" />
+    <p>You can list more than one city or country — separate with commas.</p>
+    <input type="text" id="student-region" placeholder="e.g. Netherlands, Milan, Leuven — leave blank for no preference" />
     <br>
     <button onclick="saveRegion()">Next</button>
   </div>

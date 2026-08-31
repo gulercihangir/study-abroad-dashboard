@@ -49,6 +49,43 @@ UNIVERSITIES = [
                 "prerequisites": "No English-taught Computer Science bachelor's exists at KU Leuven — this is the Dutch-medium track (offered at Leuven and Kortrijk). Requires Dutch language proficiency (NT2 or equivalent); not realistic for a Turkish applicant without prior Dutch study.",
                 "required_documents": "Diploma, transcript, Dutch language proficiency proof",
             },
+            {
+                "major": "Business Administration (English-taught)",
+                "application_deadline": "Non-EU: 1 Mar 2026; EU: 1 Jun 2026",
+                "numerus_fixus": "no",
+                "prerequisites": "Strong secondary school math grades; English proficiency (IELTS 6.5+ or equivalent).",
+                "required_documents": "Diploma, transcript, motivation letter, English test score",
+            },
+            {
+                "major": "Bachelor of Engineering Technology (English-taught)",
+                "application_deadline": "Non-EU: 1 Mar 2026; EU: 1 Jun 2026",
+                "numerus_fixus": "no",
+                "prerequisites": "Strong secondary school math and physics grades; English proficiency (IELTS 6.5+ or equivalent).",
+                "required_documents": "Diploma, transcript, motivation letter, English test score, check official admission requirements",
+            
+            },
+            {
+                "major": "Bachelor of Arts / Bachelor of European Studies (KU Leuven et al) (Bologna, Krakow, Leuven, Madrid)",
+                "application_deadline": "This programme is currently being reformed. There will be no new enrollments for the old version of this programme as of the academic year 2026-2027. Check https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_58415826/toelatingsvoorwaarden?tabs=2027&ids=admission2027%2Cadmissionint2027 for details on the new version of the programme.",
+                "numerus_fixus": "no",
+                "prerequisites": "check official admission requirements; English proficiency required. Check https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_58415826/toelatingsvoorwaarden?ids=admission2026%2Cadmissionint2026 for details.",
+                "required_documents": "Diploma, transcript, motivation letter, English test score, an academic reading and writing assignment (500-750 words); -  a video pitch, in which the candidate briefly elaborates on their motivation to study in the BAES and their writing assignment (max 120 seconds); -  a copy of the completed start university form; -  a copy of the completed mobility form.",
+            },
+            {
+                "major": "Bachelor of Laws (Trilingual: Dutch, French and English) (KU Leuven et al) (Brussels)",
+                "application_deadline": "Non-EU: 1 Mar 2026; EU: 1 Jun 2026",
+                "numerus_fixus": "no",
+                "prerequisites": "This program is taught in Dutch, French and English. Check requierements carefully on https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_57662723/toelatingsvoorwaarden?tabs=2027&ids=admission2027",
+                "required_documents": "Requirements based on your previous education: check requirements on https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_57662723/toelatingsvoorwaarden?tabs=2027&ids=admission2027",
+            },
+            {
+                "major": "Bachelor of Philosophy (Leuven)",
+                "application_deadline": "Non-EU: 1 Mar 2026; EU: 1 Jun 2026",
+                "numerus_fixus": "no",
+                "prerequisites": "The admissions process will depend on whether you've obtained your secondary education and/or previous degree(s) in the Flemish Community (Belgium) or at an academic institution outside of Flanders. Check on https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_55540651/diploma_omschrijving for details.",
+                "required_documents": " Diploma, transcript, motivation letter, English test score, an academic reading and writing assignment (500-750 words); -  a video pitch, in which the candidate briefly elaborates on their motivation to study in the BAES and their writing assignment (max 120 seconds); -  a copy of the completed start university form; -  a copy of the completed mobility form. applicants must also include the academic reading and writing assignment from the Institute of Philosophy in their application. Check details on https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_55540651/diploma_omschrijving for details.",
+            }
+
         ],
     },
     {

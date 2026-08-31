@@ -503,27 +503,37 @@ def _major_token_overlap_ratio(desired_major, program_major):
     return len(desired_tokens & program_tokens) / len(desired_tokens)
 
 
+def _score_one_major(desired_major, program_major):
+    """Scores a single desired-major candidate against a program's major,
+    returning (score, reason)."""
+    if desired_major and desired_major == program_major:
+        return 100, f"Exact match for '{desired_major}'"
+    elif desired_major and (desired_major in program_major or program_major in desired_major):
+        return 60, f"'{desired_major}' is part of this program, but it's not a dedicated program"
+    elif desired_major and _major_alias_match(desired_major, program_major):
+        return 90, f"'{desired_major}' matches this program ({program_major})"
+    elif desired_major and _major_token_overlap_ratio(desired_major, program_major) >= 0.6:
+        return 55, f"'{desired_major}' is closely related to this program ({program_major}), but not an exact match"
+    return 0, None
+
+
 def score_program(program, university, answers):
     reasons = []
     scores = {}
 
-    desired_major = (answers.get("major") or "").strip().lower()
+    desired_majors = [m.strip().lower() for m in (answers.get("major") or "").split(",") if m.strip()]
     program_major = (program.major or "").lower()
-    if desired_major and desired_major == program_major:
-        scores["major"] = 100
-        reasons.append(f"Exact match for '{answers.get('major')}'")
-    elif desired_major and (desired_major in program_major or program_major in desired_major):
-        scores["major"] = 60
-        reasons.append(f"'{answers.get('major')}' is part of this program, but it's not a dedicated program")
-    elif desired_major and _major_alias_match(desired_major, program_major):
-        scores["major"] = 90
-        reasons.append(f"'{answers.get('major')}' matches this program ({program.major})")
-    elif desired_major and _major_token_overlap_ratio(desired_major, program_major) >= 0.6:
-        scores["major"] = 55
-        reasons.append(f"'{answers.get('major')}' is closely related to this program ({program.major}), but not an exact match")
+    if desired_majors:
+        best_score, best_reason = -1, None
+        for desired_major in desired_majors:
+            candidate_score, candidate_reason = _score_one_major(desired_major, program_major)
+            if candidate_score > best_score:
+                best_score, best_reason = candidate_score, candidate_reason
+        scores["major"] = best_score
+        reasons.append(best_reason or f"Could not confirm this program matches '{answers.get('major')}'")
     else:
         scores["major"] = 0
-        reasons.append(f"Could not confirm this program matches '{answers.get('major')}'")
+        reasons.append("No field of study specified")
 
     try:
         budget = float(answers.get("max_budget", 0) or 0)
@@ -544,13 +554,14 @@ def score_program(program, university, answers):
         scores["cost"] = 50
         reasons.append("Cost data incomplete for this university")
 
-    preferred_region = (answers.get("region") or "").strip().lower()
+    preferred_regions = [r.strip().lower() for r in (answers.get("region") or "").split(",") if r.strip()]
+    preferred_regions = [r for r in preferred_regions if r != "no preference"]
     uni_location = " ".join(filter(None, [university.city, university.region, university.country])).lower()
     location_label = ", ".join(filter(None, [university.city, university.country])) or (university.region or "")
-    if not preferred_region or preferred_region == "no preference":
+    if not preferred_regions:
         scores["region"] = 100
         reasons.append("No region preference specified")
-    elif preferred_region in uni_location:
+    elif any(r in uni_location for r in preferred_regions):
         scores["region"] = 100
         reasons.append(f"Located in your preferred region ({location_label})")
     else:
