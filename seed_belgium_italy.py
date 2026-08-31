@@ -66,9 +66,9 @@ UNIVERSITIES = [
             },
             {
                 "major": "Bachelor of Arts / Bachelor of European Studies (KU Leuven et al) (Bologna, Krakow, Leuven, Madrid)",
-                "application_deadline": "This programme is currently being reformed. There will be no new enrollments for the old version of this programme as of the academic year 2026-2027. Check https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_58415826/toelatingsvoorwaarden?tabs=2027&ids=admission2027%2Cadmissionint2027 for details on the new version of the programme.",
+                "application_deadline": "Being reformed — see prerequisites",
                 "numerus_fixus": "no",
-                "prerequisites": "check official admission requirements; English proficiency required. Check https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_58415826/toelatingsvoorwaarden?ids=admission2026%2Cadmissionint2026 for details.",
+                "prerequisites": "Programme is currently being reformed — no new enrollments for the old version as of academic year 2026-2027. Check official admission requirements; English proficiency required. See https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_58415826/toelatingsvoorwaarden?tabs=2027&ids=admission2027%2Cadmissionint2027 for the new version, or https://onderwijsaanbod.kuleuven.be/opleidingen/e/SC_58415826/toelatingsvoorwaarden?ids=admission2026%2Cadmissionint2026 for 2026 details.",
                 "required_documents": "Diploma, transcript, motivation letter, English test score, an academic reading and writing assignment (500-750 words); -  a video pitch, in which the candidate briefly elaborates on their motivation to study in the BAES and their writing assignment (max 120 seconds); -  a copy of the completed start university form; -  a copy of the completed mobility form.",
             },
             {
