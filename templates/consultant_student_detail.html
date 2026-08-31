@@ -99,6 +99,34 @@
         </form>
       </div>
 
+      <div class="crm-panel" id="messages">
+        <div class="crm-panel-header">
+          <h2>Messages</h2>
+          <span class="crm-panel-header-meta">{{ messages|length }} total</span>
+        </div>
+
+        <div class="message-thread" id="message-thread">
+          {% if messages|length == 0 %}
+            <p style="font-size: 13px; color: var(--muted-foreground);">No messages yet — send the first one below.</p>
+          {% else %}
+            {% for m in messages %}
+              <div class="message-bubble from-{{ m.sender_type }}">
+                <div class="message-bubble-body">{{ m.body }}</div>
+                <div class="message-bubble-meta">
+                  {{ student.name if m.sender_type == "student" else current_user.name }} · {{ m.created_at.strftime("%d %b, %H:%M") }}
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+
+        <form method="POST" class="message-form">
+          <input type="hidden" name="form_type" value="message">
+          <textarea name="message_body" placeholder="Write a message to {{ student.name }}…" required></textarea>
+          <button type="submit">Send</button>
+        </form>
+      </div>
+
       <div class="crm-panel">
         <div class="crm-panel-header">
           <h2>Documents</h2>
@@ -138,6 +166,9 @@
           .then(() => location.reload());
       });
     });
+
+    const thread = document.getElementById('message-thread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
   </script>
   <script>
     if ('serviceWorker' in navigator) {

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Messages — Study Abroad Matcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B1120">
+</head>
+<body>
+  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
+    Logged in as {{ current_user.name }} — <a href="/my-checklist" style="color: var(--secondary);">My Checklist</a> — <a href="/my-documents" style="color: var(--secondary);">My Documents</a> — <a href="/logout" style="color: var(--secondary);">Log out</a>
+  </div>
+
+  <a href="/" style="color: var(--secondary); font-size: 13px;">&larr; Back to dashboard</a>
+
+  <h1>My Messages</h1>
+  <p>Message your consultant directly — questions, updates, anything that doesn't fit the checklist.</p>
+
+  {% if not current_user.consultant %}
+    <div class="letter-box">
+      <p>You haven't been paired with a consultant yet. Once the admin links you to one, you'll be able to message them here.</p>
+    </div>
+  {% else %}
+    <div class="result-card">
+      <h3>{{ current_user.consultant.name }}</h3>
+      <p style="font-size: 13px; margin: 2px 0 0;">{{ current_user.consultant.email }}</p>
+
+      <div class="message-thread" id="message-thread">
+        {% if messages|length == 0 %}
+          <p style="font-size: 13px; color: var(--muted-foreground);">No messages yet — say hello below.</p>
+        {% else %}
+          {% for m in messages %}
+            <div class="message-bubble from-{{ m.sender_type }}">
+              <div class="message-bubble-body">{{ m.body }}</div>
+              <div class="message-bubble-meta">
+                {{ current_user.consultant.name if m.sender_type == "consultant" else current_user.name }} · {{ m.created_at.strftime("%d %b, %H:%M") }}
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <form method="POST" class="message-form">
+        <textarea name="message_body" placeholder="Write a message…" required></textarea>
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  {% endif %}
+
+  <script>
+    const thread = document.getElementById('message-thread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+</body>
+</html>

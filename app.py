@@ -307,6 +307,19 @@ class Document(db.Model):
         return self.original_filename
 
 
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), nullable=False)
+    sender_type = db.Column(db.String(10), nullable=False)  # "student" or "consultant"
+    body = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    student = db.relationship("Student", backref="messages")
+
+    def __repr__(self):
+        return f"{self.sender_type}: {self.body[:30]}"
+
+
 @login_manager.user_loader
 def load_user(user_id):
     if user_id.startswith("s-"):
@@ -468,6 +481,7 @@ MAJOR_ALIASES = {
     "ict & software engineering": ["bilgi teknolojileri"],
     "business information technology": ["işletme bilişim sistemleri", "isletme bilisim sistemleri"],
     "global sustainability science": ["sürdürülebilirlik bilimi", "surdurulebilirlik bilimi"],
+    "art": ["güzel sanatlar", "guzel sanatlar", "resim", "heykel", "fotoğraf", "fotograf", "müzik", "muzik", "performans", "music", "painting", "sculpture", "photography", "performance"],
 }
 
 
@@ -1351,6 +1365,13 @@ def consultant_student_detail(student_id):
         return "Not authorized to view this student.", 403
 
     if request.method == "POST":
+        if request.form.get("form_type") == "message":
+            body = request.form.get("message_body", "").strip()
+            if body:
+                db.session.add(Message(student_id=student.id, sender_type="consultant", body=body))
+                db.session.commit()
+            return redirect(f"/consultant/student/{student_id}#messages")
+
         title = request.form.get("title", "").strip()
         due_date = request.form.get("due_date", "").strip()
         if title:
@@ -1366,6 +1387,7 @@ def consultant_student_detail(student_id):
     )
     checklist = ChecklistItem.query.filter_by(student_id=student.id).order_by(ChecklistItem.created_at.asc()).all()
     documents = Document.query.filter_by(student_id=student.id).order_by(Document.uploaded_at.desc()).all()
+    messages = Message.query.filter_by(student_id=student.id).order_by(Message.created_at.asc()).all()
 
     student_cards, stats = get_consultant_overview(current_user)
 
@@ -1375,6 +1397,7 @@ def consultant_student_detail(student_id):
         profile=latest_profile,
         checklist=checklist,
         documents=documents,
+        messages=messages,
         student_cards=student_cards,
         stats=stats,
         active_student_id=student.id,
@@ -1422,6 +1445,22 @@ def my_checklist():
         .all()
     )
     return render_template("my_checklist.html", items=items)
+
+
+# ─── Student <-> consultant messages ─────────────────────────────────────────
+
+@app.route("/my-messages", methods=["GET", "POST"])
+@student_required
+def my_messages():
+    if request.method == "POST":
+        body = request.form.get("message_body", "").strip()
+        if body and current_user.consultant_id:
+            db.session.add(Message(student_id=current_user.id, sender_type="student", body=body))
+            db.session.commit()
+        return redirect("/my-messages")
+
+    messages = Message.query.filter_by(student_id=current_user.id).order_by(Message.created_at.asc()).all()
+    return render_template("my_messages.html", messages=messages)
 
 
 # ─── Student's own documents ─────────────────────────────────────────────────
@@ -1682,10 +1721,11 @@ admin.add_view(ProgramAdmin(Program, db.session, name="Programs & Requirements",
 # Student view is kept only as a fallback for edge cases (fixing a typo,
 # reassigning after a consultant leaves) rather than the everyday path.
 #
-# SavedAnswers, ChecklistItem, and Document intentionally have no admin view:
-# they're already fully manageable through the CRM (student profile chips,
-# milestone checklist, and document panel respectively), so a second raw-table
-# CRUD for the same data would just be redundant clutter with no real use.
+# SavedAnswers, ChecklistItem, Document, and Message intentionally have no
+# admin view: they're already fully manageable through the CRM (student
+# profile chips, milestone checklist, document panel, and message thread
+# respectively), so a second raw-table CRUD for the same data would just be
+# redundant clutter with no real use.
 admin.add_view(StudentAdmin(Student, db.session, name="Students", category="People"))
 admin.add_view(SecureModelView(Consultant, db.session, name="Consultants", category="People"))
 admin.add_view(SecureModelView(ConsultationLead, db.session, name="Consultation Leads", category="People"))
