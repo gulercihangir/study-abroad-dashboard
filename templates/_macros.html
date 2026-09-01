@@ -71,6 +71,9 @@
     <span><strong>{{ stats.due_this_week }}</strong> Applications Due This Week</span>
   </div>
   <div class="crm-topbar-account">
+    {% if consultant.is_admin %}
+      <a href="/admin/student/" class="secondary-btn crm-manage-btn">👥 All Consultant-Student Matches</a>
+    {% endif %}
     <a href="/admin/university/" class="secondary-btn crm-manage-btn">🏫 Manage Universities</a>
     <a href="/consultant/import-universities" class="secondary-btn crm-manage-btn">📤 Bulk Import</a>
     <div class="crm-topbar-account-text">

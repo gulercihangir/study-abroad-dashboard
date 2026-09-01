@@ -30,7 +30,11 @@ msgstr "About"
 msgid "Blog"
 msgstr "Blog"
 
-#: templates/landing.html:60 templates/landing.html:168
+#: templates/landing.html:60
+msgid "Yönetici Girişi"
+msgstr "Admin Login"
+
+#: templates/landing.html:168
 msgid "Giriş yap"
 msgstr "Log in"
 
