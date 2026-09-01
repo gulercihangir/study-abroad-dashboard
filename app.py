@@ -25,6 +25,21 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 app = Flask(__name__)
 
+
+@app.url_defaults
+def _add_static_cache_buster(endpoint, values):
+    # Static asset URLs never change otherwise, so browsers keep serving a
+    # cached copy across deploys (e.g. CSS updates not showing up until a
+    # hard refresh). Appending the file's mtime forces a fresh fetch whenever
+    # the file actually changes, with no per-template upkeep needed.
+    if endpoint == "static" and "filename" in values:
+        file_path = os.path.join(app.static_folder, values["filename"])
+        try:
+            values["v"] = int(os.path.getmtime(file_path))
+        except OSError:
+            pass
+
+
 default_sqlite_path = os.path.join(BASE_DIR, "instance", "universities.db")
 database_url = os.environ.get("DATABASE_URL", f"sqlite:///{default_sqlite_path}")
 if database_url.startswith("postgres://"):
