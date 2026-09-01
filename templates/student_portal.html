@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Portal — Study Abroad Matcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+  <meta name="theme-color" content="#0B1120">
+</head>
+<body>
+  {% import '_macros.html' as macros %}
+
+  <div style="text-align: right; font-size: 13px; margin-bottom: 20px;">
+    Logged in as {{ current_user.name }} — <a href="/find-university" style="color: var(--secondary);">Find University</a> — <a href="/logout" style="color: var(--secondary);">Log out</a>
+  </div>
+
+  <div class="crm-student-header">
+    <div class="crm-avatar" style="width: 44px; height: 44px; font-size: 15px;">{{ macros.initials(current_user.name) }}</div>
+    <div>
+      <h1>Welcome back, {{ current_user.name.split(' ')[0] }}</h1>
+      <p style="margin: 2px 0 0; font-size: 13px;">{{ current_user.email }}</p>
+    </div>
+  </div>
+
+  {% if current_user.consultant %}
+    <div class="result-card">
+      <h3>Your Consultant</h3>
+      <p>{{ current_user.consultant.name }} — {{ current_user.consultant.email }}</p>
+    </div>
+  {% else %}
+    <div class="letter-box">
+      <p>You haven't been paired with a consultant yet. Once the admin links you to one, they'll show up here.</p>
+    </div>
+  {% endif %}
+
+  <div class="dash-stats">
+    <a class="dash-stat-card" href="/my-checklist" style="text-decoration: none; color: inherit;">
+      <span class="dash-stat-icon">✅</span>
+      <div class="dash-stat-value">{{ checklist_done }}/{{ checklist_total }}</div>
+      <div class="dash-stat-label">Checklist items done</div>
+    </a>
+    <a class="dash-stat-card" href="/my-documents" style="text-decoration: none; color: inherit;">
+      <span class="dash-stat-icon">📄</span>
+      <div class="dash-stat-value">{{ documents_count }}</div>
+      <div class="dash-stat-label">Documents uploaded</div>
+    </a>
+    <a class="dash-stat-card" href="/my-messages" style="text-decoration: none; color: inherit;">
+      <span class="dash-stat-icon">💬</span>
+      <div class="dash-stat-value">{{ "New" if latest_message and latest_message.sender_type == "consultant" else "—" }}</div>
+      <div class="dash-stat-label">
+        {% if latest_message %}
+          Latest message {{ latest_message.created_at.strftime("%d %b") }}
+        {% else %}
+          No messages yet
+        {% endif %}
+      </div>
+    </a>
+  </div>
+
+  {% if latest_message %}
+    <div class="crm-panel">
+      <div class="crm-panel-header">
+        <h2>💬 Latest Message</h2>
+        <a href="/my-messages" style="font-size: 12px; color: var(--secondary);">Open Messages &rarr;</a>
+      </div>
+      <div class="message-box">
+        <div class="message-thread" style="max-height: none;">
+          <div class="message-bubble from-{{ latest_message.sender_type }}" style="max-width: 100%;">
+            <div class="message-bubble-body">{{ latest_message.body }}</div>
+            <div class="message-bubble-meta">
+              {{ current_user.consultant.name if latest_message.sender_type == "consultant" else current_user.name }} · {{ latest_message.created_at.strftime("%d %b, %H:%M") }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="crm-panel" style="text-align: center; color: var(--muted-foreground);">
+    <p style="margin: 0;">Looking for more programs? <a href="/find-university" style="color: var(--secondary);">Run the matching wizard again</a>.</p>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1058,7 +1058,7 @@ def register():
         db.session.commit()
 
         login_user(student)
-        return redirect("/")
+        return redirect("/portal")
 
     return render_template("register.html")
 
@@ -1072,7 +1072,7 @@ def login():
         student = Student.query.filter_by(email=email).first()
         if student and student.check_password(password):
             login_user(student)
-            return redirect("/")
+            return redirect("/portal")
 
         return render_template("login.html", error="Invalid email or password.")
 
@@ -1432,6 +1432,28 @@ def toggle_checklist_visibility(item_id):
     item.visible_to_student = not item.visible_to_student
     db.session.commit()
     return jsonify({"status": "ok", "visible_to_student": item.visible_to_student})
+
+
+# ─── Student portal (post-login landing page) ───────────────────────────────
+
+@app.route("/portal")
+@student_required
+def student_portal():
+    checklist = ChecklistItem.query.filter_by(student_id=current_user.id, visible_to_student=True).all()
+    checklist_done = sum(1 for item in checklist if item.done)
+    documents_count = Document.query.filter_by(student_id=current_user.id).count()
+    latest_message = (
+        Message.query.filter_by(student_id=current_user.id)
+        .order_by(Message.created_at.desc())
+        .first()
+    )
+    return render_template(
+        "student_portal.html",
+        checklist_total=len(checklist),
+        checklist_done=checklist_done,
+        documents_count=documents_count,
+        latest_message=latest_message,
+    )
 
 
 # ─── Student's own checklist view ───────────────────────────────────────────

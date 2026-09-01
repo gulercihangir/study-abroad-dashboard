@@ -21,7 +21,7 @@
     </a>
     <div class="account-line">
       {% if current_user.is_authenticated %}
-        Logged in as {{ current_user.name }} — <a href="/my-checklist">My Checklist</a> — <a href="/my-documents">My Documents</a> — <a href="/my-messages">My Messages</a> — <a href="/logout">Log out</a>
+        Logged in as {{ current_user.name }} — <a href="/portal">My Portal</a> — <a href="/my-checklist">My Checklist</a> — <a href="/my-documents">My Documents</a> — <a href="/my-messages">My Messages</a> — <a href="/logout">Log out</a>
       {% else %}
         <a href="/login">Log in</a> or <a href="/register">Sign up</a>
       {% endif %}
