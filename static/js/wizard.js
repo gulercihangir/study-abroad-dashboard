@@ -119,10 +119,13 @@ function renderPurchasingPower(ppList) {
 }
 
 let lastViewedProgram = null;
+let lastResults = [];
+let aiAdvisorHistory = [];
 
 function renderResults(results) {
   const container = document.getElementById("results-container");
   container.innerHTML = "";
+  lastResults = results;
 
   if (results.length === 0) {
     container.innerHTML = "<p>No programs in the database yet. Add universities and programs via the admin panel first.</p>";
@@ -143,7 +146,6 @@ function renderResults(results) {
       <p><strong>Estimated monthly cost:</strong> €${totalCost.toFixed(0)}</p>
       <p><strong>Application deadline:</strong> ${r.application_deadline || "Not specified — check website"}</p>
       <p><strong>${numerusLabel}</strong></p>
-      ${r.prerequisites ? `<p><strong>Prerequisites:</strong> ${r.prerequisites}</p>` : ""}
       <ul>
         ${r.reasons.map(reason => `<li>${reason}</li>`).join("")}
       </ul>
@@ -158,6 +160,65 @@ function renderResults(results) {
   });
 
   document.getElementById("next-steps").classList.remove("hidden");
+  document.getElementById("ai-advisor-section").classList.remove("hidden");
+}
+
+function appendAiAdvisorMessage(role, text) {
+  const thread = document.getElementById("ai-advisor-thread");
+  const emptyMsg = thread.querySelector(".message-empty");
+  if (emptyMsg) {
+    emptyMsg.remove();
+  }
+
+  const bubble = document.createElement("div");
+  bubble.className = `message-bubble ${role === "user" ? "from-user" : "from-ai"}`;
+  const body = document.createElement("div");
+  body.className = "message-bubble-body";
+  body.textContent = text;
+  bubble.appendChild(body);
+
+  thread.appendChild(bubble);
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function sendAiAdvisorMessage() {
+  const input = document.getElementById("ai-advisor-input");
+  const question = input.value.trim();
+
+  if (!question) {
+    return;
+  }
+  if (lastResults.length === 0) {
+    alert("Find your matches first before asking the AI advisor.");
+    return;
+  }
+
+  appendAiAdvisorMessage("user", question);
+  aiAdvisorHistory.push({ role: "user", content: question });
+  input.value = "";
+
+  fetch("/api/ai-advisor-chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      question: question,
+      results: lastResults,
+      history: aiAdvisorHistory.slice(-6)
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        appendAiAdvisorMessage("ai", data.error);
+        return;
+      }
+      appendAiAdvisorMessage("ai", data.reply);
+      aiAdvisorHistory.push({ role: "assistant", content: data.reply });
+    })
+    .catch(error => {
+      console.error("Error sending AI advisor message:", error);
+      appendAiAdvisorMessage("ai", "Something went wrong. Please try again.");
+    });
 }
 
 function openConsultationForm() {
@@ -276,6 +337,8 @@ function startOver() {
     diploma_type: null,
   };
   lastViewedProgram = null;
+  lastResults = [];
+  aiAdvisorHistory = [];
 
   document.getElementById("student-major").value = "";
   document.getElementById("student-budget").value = "";
@@ -292,6 +355,10 @@ function startOver() {
   document.getElementById("results-container").innerHTML = "";
   document.getElementById("next-steps").classList.add("hidden");
   document.getElementById("purchasing-power-info").classList.add("hidden");
+
+  document.getElementById("ai-advisor-section").classList.add("hidden");
+  document.getElementById("ai-advisor-thread").innerHTML = '<p class="message-empty">Ask a question about your results above to get started.</p>';
+  document.getElementById("ai-advisor-input").value = "";
 
   document.getElementById("letter-text").value = "";
   document.getElementById("letter-feedback-result").classList.add("hidden");

@@ -212,6 +212,20 @@
 
     <div id="results-container"></div>
 
+    <div id="ai-advisor-section" class="letter-box hidden">
+      <h3>Ask the AI Advisor About Your Matches</h3>
+      <p>Ask questions about the universities and programs shown above. The AI only knows what's listed here — for anything else, it'll tell you honestly instead of guessing.</p>
+      <div class="message-box">
+        <div id="ai-advisor-thread" class="message-thread">
+          <p class="message-empty">Ask a question about your results above to get started.</p>
+        </div>
+        <div class="message-form">
+          <textarea id="ai-advisor-input" rows="1" placeholder="e.g. Which of these has the earliest deadline?"></textarea>
+          <button onclick="sendAiAdvisorMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+
     <div id="next-steps" class="hidden">
       <h3>What's next?</h3>
       <button onclick="alert('Apply-yourself flow coming soon.')">Apply Yourself</button>

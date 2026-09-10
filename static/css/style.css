@@ -1405,6 +1405,22 @@ body.crm-page {
   border-bottom-left-radius: 4px;
 }
 
+/* AI advisor chat reuses the message-box/message-bubble system above */
+.message-bubble.from-user {
+  align-self: flex-end;
+  background: var(--secondary);
+  color: #FFFFFF;
+  border-bottom-right-radius: 4px;
+}
+
+.message-bubble.from-ai {
+  align-self: flex-start;
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
 .message-form {
   display: flex;
   align-items: flex-end;

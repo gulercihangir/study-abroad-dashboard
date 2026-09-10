@@ -2,6 +2,7 @@ import os
 import re
 import csv
 import io
+import json
 import secrets
 from functools import wraps
 from datetime import datetime, timedelta
@@ -137,6 +138,42 @@ facts about the student. Keep the whole response under 300 words.
 
 Letter:
 {letter_text}
+"""
+    response = gemini_client.models.generate_content(
+        model="gemini-3.1-flash-lite",
+        contents=prompt,
+    )
+    return response.text
+
+
+def answer_ai_advisor_question(question, results, history):
+    # results comes straight from the /api/find-universities response the student is
+    # looking at, so it's already the exact set of real universities/programs on screen —
+    # the prompt below leans hard on "ONLY this data" to keep the model from inventing
+    # anything not in it (Patika's whole pitch is transparent, non-hallucinated matches).
+    results_json = json.dumps(results, ensure_ascii=False, indent=2)
+    history_text = "\n".join(
+        f"{'Student' if m.get('role') == 'user' else 'Advisor'}: {m.get('content', '')}"
+        for m in history
+    )
+
+    prompt = f"""You are an AI admissions advisor helping a student understand their university
+match results shown below. These results are the ONLY universities, programs, deadlines,
+and prerequisites you know about. Never mention, compare against, or invent any university,
+program, deadline, or requirement that isn't in this list. If the student asks something this
+data doesn't cover, say so honestly and tell them to check the official university website or
+ask a human consultant — never guess or make something up.
+
+Match results (JSON):
+{results_json}
+
+Recent conversation:
+{history_text or "(no previous messages)"}
+
+Student's new question: {question}
+
+Answer in 2-4 short sentences, in the same language the student is writing in. Stay grounded
+only in the data above.
 """
     response = gemini_client.models.generate_content(
         model="gemini-3.1-flash-lite",
@@ -963,7 +1000,6 @@ def find_universities():
                 "rent_estimate_monthly": r["university"].rent_estimate_monthly,
                 "application_deadline": r["program"].application_deadline,
                 "numerus_fixus": r["program"].numerus_fixus,
-                "prerequisites": r["program"].prerequisites,
             }
             for r in top_matches
         ],
@@ -1010,6 +1046,26 @@ def evaluate_letter():
     except Exception as e:
         print("Error evaluating letter:", e)
         return jsonify({"error": "Something went wrong generating feedback. Check your API key and try again."}), 500
+
+
+@app.route("/api/ai-advisor-chat", methods=["POST"])
+def ai_advisor_chat():
+    data = request.json
+    question = (data.get("question") or "").strip()
+    results = data.get("results") or []
+    history = data.get("history") or []
+
+    if not question:
+        return jsonify({"error": "No question provided"}), 400
+    if not results:
+        return jsonify({"error": "No results to ask about yet — find your matches first."}), 400
+
+    try:
+        reply = answer_ai_advisor_question(question, results, history)
+        return jsonify({"reply": reply})
+    except Exception as e:
+        print("Error answering AI advisor chat:", e)
+        return jsonify({"error": "Something went wrong generating a reply. Try again."}), 500
 
 
 @app.route("/api/consultation-interest", methods=["POST"])
