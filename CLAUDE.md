@@ -63,11 +63,13 @@ aynı öğrenciyi almasını önlüyor).
 
 ## Şu an üzerinde çalışılan özellik
 
-**AI Danışman sohbeti** — öğrencinin sonuç sayfasında, sadece o an ekranda gösterilen **gerçek**
-sonuçlarla sınırlı (RAG mantığı, halüsinasyon riski olmadan) bir chat arayüzü. Bilinçli olarak
-şunları YAPMIYOR: (1) serbest AI ile üniversite önermek, (2) döküman kontrolünü bağlayıcı/kesin
-bir doğrulama olarak sunmak — ikisi de gerçek zarar riski taşıdığı için, mevcut motivasyon
-mektubu özelliğindeki gibi "genel, ilk bakış" çerçevesinde tutulmalı.
+**AI Danışman sohbeti** — öğrencinin sonuç sayfasında bir chat arayüzü. Önceki tasarımda
+sadece ekrandaki sonuçlarla sınırlıydı (RAG mantığı, halüsinasyon riski olmadan); bilinçli bir
+karar olarak bu kısıtlama kaldırıldı — artık genel amaçlı, serbest bir AI ajanı gibi davranıyor,
+ekrandaki sonuçları bağlam olarak kullanıyor ama üniversite önerme/genel tavsiye vermekle
+sınırlı değil. (Not: bu, önceki "kara kutu değil, şeffaf" konumlandırmasıyla gerilim yaratıyor —
+kurucunun bilinçli tercihi.) Döküman kontrolü hâlâ bağlayıcı/kesin bir doğrulama olarak
+sunulmuyor, mevcut motivasyon mektubu özelliğindeki gibi "genel, ilk bakış" çerçevesinde.
 
 ## Diğer bilinmesi gerekenler
 

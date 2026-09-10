@@ -147,24 +147,23 @@ Letter:
 
 
 def answer_ai_advisor_question(question, results, history):
-    # results comes straight from the /api/find-universities response the student is
-    # looking at, so it's already the exact set of real universities/programs on screen —
-    # the prompt below leans hard on "ONLY this data" to keep the model from inventing
-    # anything not in it (Patika's whole pitch is transparent, non-hallucinated matches).
+    # results are the student's current on-screen match results, passed along as
+    # helpful context — the advisor is a general study-abroad assistant, not limited
+    # to only this list, so it can also draw on its own knowledge (other programs,
+    # visas, admissions norms, general advice) the way any AI agent would.
     results_json = json.dumps(results, ensure_ascii=False, indent=2)
     history_text = "\n".join(
         f"{'Student' if m.get('role') == 'user' else 'Advisor'}: {m.get('content', '')}"
         for m in history
     )
 
-    prompt = f"""You are an AI admissions advisor helping a student understand their university
-match results shown below. These results are the ONLY universities, programs, deadlines,
-and prerequisites you know about. Never mention, compare against, or invent any university,
-program, deadline, or requirement that isn't in this list. If the student asks something this
-data doesn't cover, say so honestly and tell them to check the official university website or
-ask a human consultant — never guess or make something up.
+    prompt = f"""You are a friendly, knowledgeable AI study-abroad advisor chatting with a student.
+They're currently looking at the university/program match results below, so use those as helpful
+context when relevant — but you're not limited to them. Feel free to draw on your own general
+knowledge of universities, programs, admissions, visas, scholarships, and student life to give a
+genuinely useful, conversational answer, just like any capable AI assistant would.
 
-Match results (JSON):
+Student's current match results (JSON, for context):
 {results_json}
 
 Recent conversation:
@@ -172,8 +171,8 @@ Recent conversation:
 
 Student's new question: {question}
 
-Answer in 2-4 short sentences, in the same language the student is writing in. Stay grounded
-only in the data above.
+Reply naturally and warmly, in the same language the student is writing in. Keep it concise
+(roughly 2-5 sentences unless more detail is clearly needed).
 """
     response = gemini_client.models.generate_content(
         model="gemini-3.1-flash-lite",
