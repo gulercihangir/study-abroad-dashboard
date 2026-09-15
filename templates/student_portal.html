@@ -19,7 +19,13 @@
   </div>
 
   <div class="crm-student-header">
-    <div class="crm-avatar" style="width: 44px; height: 44px; font-size: 15px;">{{ macros.initials(current_user.name) }}</div>
+    <form method="POST" action="/my-profile/photo" enctype="multipart/form-data" class="avatar-upload-form">
+      <label class="avatar-upload-label" title="Click to change your photo">
+        {{ macros.avatar(current_user, 'student', 'crm-avatar', 'width: 44px; height: 44px; font-size: 15px;') }}
+        <span class="avatar-upload-hint">✎</span>
+        <input type="file" name="photo" accept="image/*" onchange="this.form.submit()">
+      </label>
+    </form>
     <div>
       <h1>Welcome back, {{ current_user.name.split(' ')[0] }}</h1>
       <p style="margin: 2px 0 0; font-size: 13px;">{{ current_user.email }}</p>
@@ -27,9 +33,12 @@
   </div>
 
   {% if current_user.consultant %}
-    <div class="result-card">
-      <h3>Your Consultant</h3>
-      <p>{{ current_user.consultant.name }} — {{ current_user.consultant.email }}</p>
+    <div class="result-card" style="display: flex; align-items: center; gap: 14px;">
+      {{ macros.avatar(current_user.consultant, 'consultant', 'crm-avatar', 'width: 36px; height: 36px; font-size: 13px; flex-shrink: 0;') }}
+      <div>
+        <h3 style="margin: 0;">Your Consultant</h3>
+        <p style="margin: 2px 0 0;">{{ current_user.consultant.name }} — {{ current_user.consultant.email }}</p>
+      </div>
     </div>
   {% else %}
     <div class="letter-box">

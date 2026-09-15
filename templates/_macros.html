@@ -59,6 +59,19 @@
 {{ name.split(' ')|map('first')|join('')|upper|truncate(2, True, '') }}
 {%- endmacro %}
 
+{% macro avatar(person, role, css_class='crm-avatar', style='') %}
+{% if person and person.photo %}
+  {% if role == 'student' %}
+    {% set photo_url = url_for('student_photo', student_id=person.id) %}
+  {% else %}
+    {% set photo_url = url_for('consultant_photo', consultant_id=person.id) %}
+  {% endif %}
+<img class="{{ css_class }} avatar-photo" style="{{ style }}" src="{{ photo_url }}" alt="{{ person.name }}">
+{% else %}
+<div class="{{ css_class }}" style="{{ style }}">{{ initials(person.name) }}</div>
+{% endif %}
+{% endmacro %}
+
 {% macro crm_topbar(consultant, stats) %}
 <div class="crm-topbar">
   <a class="brand-lockup" href="/consultant/dashboard">
@@ -80,7 +93,13 @@
       <div class="crm-account-name">{{ consultant.name }}</div>
       <a href="/consultant/logout">Log out</a>
     </div>
-    <div class="crm-avatar">{{ initials(consultant.name) }}</div>
+    <form method="POST" action="/consultant/profile/photo" enctype="multipart/form-data" class="avatar-upload-form">
+      <label class="avatar-upload-label" title="Click to change your photo">
+        {{ avatar(consultant, 'consultant', 'crm-avatar') }}
+        <span class="avatar-upload-hint">✎</span>
+        <input type="file" name="photo" accept="image/*" onchange="this.form.submit()">
+      </label>
+    </form>
   </div>
 </div>
 {% endmacro %}
@@ -96,7 +115,7 @@
       <a href="/consultant/student/{{ card.student.id }}"
          class="crm-student-item {% if card.student.id == active_student_id %}is-active{% endif %}"
          data-name="{{ card.student.name|lower }}">
-        <div class="crm-student-avatar">{{ initials(card.student.name) }}</div>
+        {{ avatar(card.student, 'student', 'crm-student-avatar') }}
         <div class="crm-student-item-text">
           <div class="crm-student-name">{{ card.student.name }}</div>
           <div class="crm-student-sub">

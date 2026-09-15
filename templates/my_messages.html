@@ -36,10 +36,28 @@
           {% else %}
             {% for m in messages %}
               <div class="message-bubble from-{{ m.sender_type }}">
-                <div class="message-bubble-body">{{ m.body }}</div>
+                <div class="message-bubble-body" id="message-body-{{ m.id }}">{{ m.body }}</div>
+                {% if m.edited_at %}<div class="message-edited-tag">(edited)</div>{% endif %}
                 <div class="message-bubble-meta">
                   {{ current_user.consultant.name if m.sender_type == "consultant" else current_user.name }} · {{ m.created_at.strftime("%d %b, %H:%M") }}
+                  {% if m.sender_type == "student" %}
+                    <span class="message-actions">
+                      <a onclick="toggleMessageEdit({{ m.id }})">Edit</a>
+                      <form method="POST" action="/messages/{{ m.id }}/delete" onsubmit="return confirm('Delete this message?');" style="display: inline;">
+                        <button type="submit" class="message-action-btn">Delete</button>
+                      </form>
+                    </span>
+                  {% endif %}
                 </div>
+                {% if m.sender_type == "student" %}
+                  <form method="POST" action="/messages/{{ m.id }}/edit" class="message-edit-form hidden" id="message-edit-{{ m.id }}">
+                    <textarea name="message_body">{{ m.body }}</textarea>
+                    <div class="message-edit-actions">
+                      <button type="submit">Save</button>
+                      <button type="button" onclick="toggleMessageEdit({{ m.id }})">Cancel</button>
+                    </div>
+                  </form>
+                {% endif %}
               </div>
             {% endfor %}
           {% endif %}
@@ -56,6 +74,11 @@
   <script>
     const thread = document.getElementById('message-thread');
     if (thread) thread.scrollTop = thread.scrollHeight;
+
+    function toggleMessageEdit(id) {
+      document.getElementById(`message-body-${id}`).classList.toggle('hidden');
+      document.getElementById(`message-edit-${id}`).classList.toggle('hidden');
+    }
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {

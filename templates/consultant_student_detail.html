@@ -23,7 +23,7 @@
       <a href="/consultant/dashboard" style="color: var(--secondary); font-size: 13px;">&larr; Back to overview</a>
 
       <div class="crm-student-header" style="margin-top: 12px;">
-        <div class="crm-avatar" style="width: 44px; height: 44px; font-size: 15px;">{{ macros.initials(student.name) }}</div>
+        {{ macros.avatar(student, 'student', 'crm-avatar', 'width: 44px; height: 44px; font-size: 15px;') }}
         <div>
           <h1>{{ student.name }}</h1>
           <p style="margin: 2px 0 0; font-size: 13px;">{{ student.email }}</p>
@@ -112,10 +112,28 @@
             {% else %}
               {% for m in messages %}
                 <div class="message-bubble from-{{ m.sender_type }}">
-                  <div class="message-bubble-body">{{ m.body }}</div>
+                  <div class="message-bubble-body" id="message-body-{{ m.id }}">{{ m.body }}</div>
+                  {% if m.edited_at %}<div class="message-edited-tag">(edited)</div>{% endif %}
                   <div class="message-bubble-meta">
                     {{ student.name if m.sender_type == "student" else current_user.name }} · {{ m.created_at.strftime("%d %b, %H:%M") }}
+                    {% if m.sender_type == "consultant" %}
+                      <span class="message-actions">
+                        <a onclick="toggleMessageEdit({{ m.id }})">Edit</a>
+                        <form method="POST" action="/messages/{{ m.id }}/delete" onsubmit="return confirm('Delete this message?');" style="display: inline;">
+                          <button type="submit" class="message-action-btn">Delete</button>
+                        </form>
+                      </span>
+                    {% endif %}
                   </div>
+                  {% if m.sender_type == "consultant" %}
+                    <form method="POST" action="/messages/{{ m.id }}/edit" class="message-edit-form hidden" id="message-edit-{{ m.id }}">
+                      <textarea name="message_body">{{ m.body }}</textarea>
+                      <div class="message-edit-actions">
+                        <button type="submit">Save</button>
+                        <button type="button" onclick="toggleMessageEdit({{ m.id }})">Cancel</button>
+                      </div>
+                    </form>
+                  {% endif %}
                 </div>
               {% endfor %}
             {% endif %}
@@ -129,26 +147,41 @@
         </div>
       </div>
 
-      <div class="crm-panel">
+      <div class="crm-panel" id="documents">
         <div class="crm-panel-header">
           <h2>Documents</h2>
           <span class="crm-panel-header-meta">{{ documents|length }} uploaded</span>
         </div>
         {% if documents|length == 0 %}
-          <p>No documents uploaded by this student yet.</p>
+          <p>No documents uploaded yet.</p>
         {% else %}
           <div class="doc-list">
             {% for doc in documents %}
               <div class="doc-item">
                 <div>
                   <div class="doc-item-name">{{ doc.original_filename }}</div>
-                  <div class="doc-item-meta">Uploaded {{ doc.uploaded_at.strftime("%d %b %Y") }}</div>
+                  <div class="doc-item-meta">
+                    Uploaded {{ doc.uploaded_at.strftime("%d %b %Y") }}
+                    &middot; by {{ "you" if doc.uploaded_by_type == "consultant" else student.name }}
+                  </div>
                 </div>
-                <a href="/documents/{{ doc.id }}/download">Download</a>
+                <div style="display: flex; gap: 10px; align-items: center; flex-shrink: 0;">
+                  <a href="/documents/{{ doc.id }}/download">Download</a>
+                  <form method="POST" action="/consultant/documents/{{ doc.id }}/delete" onsubmit="return confirm('Delete this document?');" style="margin: 0;">
+                    <button type="submit" class="secondary-btn" style="font-size: 12px; padding: 5px 10px; margin: 0;">Delete</button>
+                  </form>
+                </div>
               </div>
             {% endfor %}
           </div>
         {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" style="margin-top: 16px;">
+          <input type="hidden" name="form_type" value="document">
+          <input type="file" name="document" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" required />
+          <br>
+          <button type="submit">Upload Document</button>
+        </form>
       </div>
     </main>
   </div>
@@ -171,6 +204,11 @@
 
     const thread = document.getElementById('message-thread');
     if (thread) thread.scrollTop = thread.scrollHeight;
+
+    function toggleMessageEdit(id) {
+      document.getElementById(`message-body-${id}`).classList.toggle('hidden');
+      document.getElementById(`message-edit-${id}`).classList.toggle('hidden');
+    }
   </script>
   <script>
     if ('serviceWorker' in navigator) {

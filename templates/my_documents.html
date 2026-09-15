@@ -42,13 +42,18 @@
       <div class="result-card" style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
         <div>
           <div>{{ doc.original_filename }}</div>
-          <p style="font-size: 12px; margin: 4px 0 0;">Uploaded {{ doc.uploaded_at.strftime("%d %b %Y") }}</p>
+          <p style="font-size: 12px; margin: 4px 0 0;">
+            Uploaded {{ doc.uploaded_at.strftime("%d %b %Y") }}
+            {% if doc.uploaded_by_type == "consultant" %}&middot; by your consultant{% endif %}
+          </p>
         </div>
         <div style="display: flex; gap: 8px; flex-shrink: 0;">
           <a class="secondary-btn" style="text-decoration: none; padding: 8px 14px; border-radius: 10px; font-size: 13px;" href="/documents/{{ doc.id }}/download">Download</a>
-          <form method="POST" action="/my-documents/{{ doc.id }}/delete" onsubmit="return confirm('Delete this document?');">
-            <button type="submit" class="secondary-btn" style="font-size: 13px; padding: 8px 14px;">Delete</button>
-          </form>
+          {% if doc.uploaded_by_type == "student" %}
+            <form method="POST" action="/my-documents/{{ doc.id }}/delete" onsubmit="return confirm('Delete this document?');">
+              <button type="submit" class="secondary-btn" style="font-size: 13px; padding: 8px 14px;">Delete</button>
+            </form>
+          {% endif %}
         </div>
       </div>
     {% endfor %}

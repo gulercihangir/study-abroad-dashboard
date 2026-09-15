@@ -72,10 +72,16 @@ def set_language(code):
     return redirect(request.referrer or "/")
 
 ALLOWED_DOCUMENT_EXTENSIONS = {"pdf", "doc", "docx", "jpg", "jpeg", "png"}
+ALLOWED_PHOTO_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+MAX_PHOTO_BYTES = 5 * 1024 * 1024  # 5 MB
 
 
 def allowed_document(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_DOCUMENT_EXTENSIONS
+
+
+def allowed_photo(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_PHOTO_EXTENSIONS
 
 
 login_manager = LoginManager()
@@ -229,6 +235,8 @@ class Consultant(UserMixin, db.Model):
     reset_token = db.Column(db.String(100))
     reset_token_expiry = db.Column(db.DateTime)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
+    photo = db.Column(db.LargeBinary)
+    photo_content_type = db.Column(db.String(100))
 
     students = db.relationship("Student", backref="consultant", lazy=True, foreign_keys="Student.consultant_id")
 
@@ -266,6 +274,8 @@ class Student(UserMixin, db.Model):
     reset_token = db.Column(db.String(100))
     reset_token_expiry = db.Column(db.DateTime)
     consultant_id = db.Column(db.Integer, db.ForeignKey("consultant.id"), nullable=True)
+    photo = db.Column(db.LargeBinary)
+    photo_content_type = db.Column(db.String(100))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -351,6 +361,7 @@ class Document(db.Model):
     content_type = db.Column(db.String(100))
     data = db.Column(db.LargeBinary, nullable=False)
     uploaded_at = db.Column(db.DateTime, server_default=db.func.now())
+    uploaded_by_type = db.Column(db.String(10), nullable=False, default="student")  # "student" or "consultant"
 
     student = db.relationship("Student", backref="documents")
 
@@ -364,6 +375,7 @@ class Message(db.Model):
     sender_type = db.Column(db.String(10), nullable=False)  # "student" or "consultant"
     body = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
+    edited_at = db.Column(db.DateTime)
 
     student = db.relationship("Student", backref="messages")
 
@@ -1390,6 +1402,28 @@ def consultant_logout():
     return redirect("/consultant/login")
 
 
+@app.route("/consultant/profile/photo", methods=["POST"])
+@consultant_required
+def upload_consultant_photo():
+    file = request.files.get("photo")
+    if file and file.filename and allowed_photo(file.filename):
+        data = file.read()
+        if len(data) <= MAX_PHOTO_BYTES:
+            current_user.photo = data
+            current_user.photo_content_type = file.mimetype
+            db.session.commit()
+    return redirect(request.referrer or "/consultant/dashboard")
+
+
+@app.route("/photo/consultant/<int:consultant_id>")
+@login_required
+def consultant_photo(consultant_id):
+    consultant = Consultant.query.get_or_404(consultant_id)
+    if not consultant.photo:
+        return "", 404
+    return Response(consultant.photo, mimetype=consultant.photo_content_type or "image/jpeg")
+
+
 @app.route("/consultant/dashboard")
 @consultant_required
 def consultant_dashboard():
@@ -1441,6 +1475,19 @@ def consultant_student_detail(student_id):
                 db.session.add(Message(student_id=student.id, sender_type="consultant", body=body))
                 db.session.commit()
             return redirect(f"/consultant/student/{student_id}#messages")
+
+        if request.form.get("form_type") == "document":
+            file = request.files.get("document")
+            if file and file.filename and allowed_document(file.filename):
+                db.session.add(Document(
+                    student_id=student.id,
+                    original_filename=secure_filename(file.filename),
+                    content_type=file.mimetype,
+                    data=file.read(),
+                    uploaded_by_type="consultant",
+                ))
+                db.session.commit()
+            return redirect(f"/consultant/student/{student_id}#documents")
 
         title = request.form.get("title", "").strip()
         due_date = request.form.get("due_date", "").strip()
@@ -1504,6 +1551,30 @@ def toggle_checklist_visibility(item_id):
     return jsonify({"status": "ok", "visible_to_student": item.visible_to_student})
 
 
+# ─── Profile photos ──────────────────────────────────────────────────────────
+
+@app.route("/my-profile/photo", methods=["POST"])
+@student_required
+def upload_student_photo():
+    file = request.files.get("photo")
+    if file and file.filename and allowed_photo(file.filename):
+        data = file.read()
+        if len(data) <= MAX_PHOTO_BYTES:
+            current_user.photo = data
+            current_user.photo_content_type = file.mimetype
+            db.session.commit()
+    return redirect(request.referrer or "/portal")
+
+
+@app.route("/photo/student/<int:student_id>")
+@login_required
+def student_photo(student_id):
+    student = Student.query.get_or_404(student_id)
+    if not student.photo:
+        return "", 404
+    return Response(student.photo, mimetype=student.photo_content_type or "image/jpeg")
+
+
 # ─── Student portal (post-login landing page) ───────────────────────────────
 
 @app.route("/portal")
@@ -1555,6 +1626,48 @@ def my_messages():
     return render_template("my_messages.html", messages=messages)
 
 
+def _message_redirect(student_id):
+    if isinstance(current_user, Consultant):
+        return redirect(f"/consultant/student/{student_id}#messages")
+    return redirect("/my-messages")
+
+
+def _can_edit_message(message):
+    if isinstance(current_user, Student):
+        return message.sender_type == "student" and message.student_id == current_user.id
+    if isinstance(current_user, Consultant):
+        return message.sender_type == "consultant" and message.student.consultant_id == current_user.id
+    return False
+
+
+@app.route("/messages/<int:message_id>/edit", methods=["POST"])
+@login_required
+def edit_message(message_id):
+    message = Message.query.get_or_404(message_id)
+    if not _can_edit_message(message):
+        return "Not authorized", 403
+
+    body = request.form.get("message_body", "").strip()
+    if body:
+        message.body = body
+        message.edited_at = datetime.utcnow()
+        db.session.commit()
+    return _message_redirect(message.student_id)
+
+
+@app.route("/messages/<int:message_id>/delete", methods=["POST"])
+@login_required
+def delete_message(message_id):
+    message = Message.query.get_or_404(message_id)
+    if not _can_edit_message(message):
+        return "Not authorized", 403
+
+    student_id = message.student_id
+    db.session.delete(message)
+    db.session.commit()
+    return _message_redirect(student_id)
+
+
 # ─── Student's own documents ─────────────────────────────────────────────────
 
 @app.route("/my-documents", methods=["GET", "POST"])
@@ -1573,6 +1686,7 @@ def my_documents():
                 original_filename=secure_filename(file.filename),
                 content_type=file.mimetype,
                 data=file.read(),
+                uploaded_by_type="student",
             ))
             db.session.commit()
             return redirect("/my-documents")
@@ -1591,10 +1705,25 @@ def delete_document(doc_id):
     doc = Document.query.get_or_404(doc_id)
     if doc.student_id != current_user.id:
         return "Not authorized", 403
+    if doc.uploaded_by_type != "student":
+        return "Only your consultant can remove a document they uploaded.", 403
 
     db.session.delete(doc)
     db.session.commit()
     return redirect("/my-documents")
+
+
+@app.route("/consultant/documents/<int:doc_id>/delete", methods=["POST"])
+@consultant_required
+def consultant_delete_document(doc_id):
+    doc = Document.query.get_or_404(doc_id)
+    if doc.student.consultant_id != current_user.id:
+        return "Not authorized", 403
+
+    student_id = doc.student_id
+    db.session.delete(doc)
+    db.session.commit()
+    return redirect(f"/consultant/student/{student_id}#documents")
 
 
 @app.route("/documents/<int:doc_id>/download")
