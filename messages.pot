@@ -47,8 +47,8 @@ msgstr ""
 
 #: templates/landing.html:72
 msgid ""
-"Bütçenden ders çalışma tarzına kadar 9 kısa soruyla seni Hollanda'daki en"
-" uygun üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, "
+"Bütçenden ders çalışma tarzına kadar 8 kısa soruyla seni en uygun "
+"üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, "
 "karşılaştırılabilir veri."
 msgstr ""
 

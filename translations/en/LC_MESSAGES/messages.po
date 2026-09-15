@@ -48,13 +48,13 @@ msgstr "Find the right university,<br>the right program,<br>with <span>real data
 
 #: templates/landing.html:72
 msgid ""
-"Bütçenden ders çalışma tarzına kadar 9 kısa soruyla seni Hollanda'daki en"
-" uygun üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, "
+"Bütçenden ders çalışma tarzına kadar 8 kısa soruyla seni en uygun "
+"üniversite ve bölümlerle eşleştiriyoruz — satış konuşması değil, "
 "karşılaştırılabilir veri."
 msgstr ""
-"From your budget to your learning style, 9 quick questions match you with "
-"the best-fit universities and programs in the Netherlands — not a sales "
-"pitch, comparable data."
+"From your budget to your learning style, 8 quick questions match you with "
+"the best-fit universities and programs abroad — not a sales pitch, "
+"comparable data."
 
 #: templates/landing.html:75
 msgid "Ücretsiz eşleşme"

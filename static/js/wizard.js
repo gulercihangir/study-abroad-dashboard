@@ -9,7 +9,6 @@ let studentAnswers = {
   priority_major: 5,
   priority_cost: 5,
   priority_region: 5,
-  diploma_type: null,
 };
 
 function saveMajor() {
@@ -66,11 +65,6 @@ function savePriorities() {
   studentAnswers.priority_major = document.getElementById("priority-major-slider").value;
   studentAnswers.priority_cost = document.getElementById("priority-cost-slider").value;
   studentAnswers.priority_region = document.getElementById("priority-region-slider").value;
-  showStep(9);
-}
-
-function selectDiplomaType(value) {
-  studentAnswers.diploma_type = value;
   findMatches();
 }
 
@@ -86,7 +80,7 @@ function findMatches() {
       console.log("Purchasing power context:", data.purchasing_power);
       renderPurchasingPower(data.purchasing_power);
       renderResults(data.results);
-      showStep(10);
+      showStep(9);
     })
     .catch(error => {
       console.error("Error finding matches:", error);
@@ -334,7 +328,6 @@ function startOver() {
     priority_major: 5,
     priority_cost: 5,
     priority_region: 5,
-    diploma_type: null,
   };
   lastViewedProgram = null;
   lastResults = [];
@@ -382,7 +375,7 @@ function showStep(stepNumber) {
 
 function updateWizardProgress(stepNumber) {
   const progress = document.getElementById("wizard-progress");
-  const totalSteps = 9;
+  const totalSteps = 8;
 
   if (stepNumber > totalSteps) {
     progress.classList.add("hidden");
